@@ -1,0 +1,106 @@
+{
+  "date": "2026-11-16",
+  "scope": "教学弹窗、重开不重复、已通关不显示、横向溢出、按钮可见及真实截图；非全50关交互测试",
+  "rows": [
+    {
+      "width": 360,
+      "level": 1,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 360,
+      "level": 4,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 360,
+      "level": 9,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 390,
+      "level": 1,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 390,
+      "level": 4,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 390,
+      "level": 9,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 1280,
+      "level": 1,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 1280,
+      "level": 4,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    },
+    {
+      "width": 1280,
+      "level": 9,
+      "first": {
+        "shown": true,
+        "overflow": false,
+        "button": true
+      },
+      "restart": true,
+      "cleared": true
+    }
+  ],
+  "errors": []
+}

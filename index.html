@@ -1,0 +1,5081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>生态链 · EcoLoop（Demo）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: linear-gradient(180deg, #cfe9d6 0%, #a9dbbb 55%, #8fc9a4 100%);
+    color: #2d4a35; min-height: 100vh;
+    display: flex; justify-content: center; user-select: none; overflow-x: hidden;
+  }
+  #app { width: 100%; max-width: 470px; padding: 10px 12px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; }
+  h1 { font-size: 22px; letter-spacing: 1px; }
+  h1 .sub { font-size: 11px; font-weight: 400; opacity: .55; margin-left: 6px; letter-spacing: 0; }
+  .hbtns { display: flex; gap: 6px; }
+  .iconbtn { width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,.8);
+    background: rgba(255,255,255,.6); font-size: 16px; cursor: pointer; }
+
+  #levelrow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  #levelbar { display: flex; gap: 5px; flex-direction: column; width: 100%; min-width: 0; }
+  .navtools { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; font-size:11px; color:#436a4b; }
+  .listbtn { padding:6px 10px; border:1px solid #bad8c2; border-radius:10px; background:rgba(255,255,255,.8); color:#256b38; font-weight:700; cursor:pointer; }
+  .alllevels { display:grid; grid-template-columns:repeat(auto-fit,minmax(42px,1fr)); gap:6px; max-height:55vh; overflow-y:auto; margin:12px 0 18px; padding:3px; }
+  /* FR-22 选关分章:章标签页 + 单页按钮(flex-wrap 保证 360px 无溢出) */
+  .chbtn { padding: 4px 10px; border-radius: 10px; border: 2px solid #cfe3d4;
+    background: rgba(255,255,255,.75); font-size: 12px; font-weight: 800; cursor: pointer;
+    color: #2d4a35; display: flex; align-items: center; gap: 4px; }
+  .chbtn i { font-style: normal; font-size: 9px; color: #e0a52c; }
+  .chbtn.cur { background: #2f8c46; color: #fff; border-color: #2f8c46; }
+  .chbtn.cur i { color: #ffe08a; }
+  .lvpage { display: grid; gap: 5px; width: 100%; }
+  .lvbtn { min-width: 36px; padding: 5px 6px; border-radius: 10px; border: 2px solid #cfe3d4;
+    background: rgba(255,255,255,.75); font-size: 13px; font-weight: 700; cursor: pointer; color: #2d4a35;
+    display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+  .lvbtn span { font-size: 9px; color: #e0a52c; letter-spacing: -1px; min-height: 10px; }
+  .lvbtn.cur { background: #2f8c46; color: #fff; border-color: #2f8c46; }
+  .lvbtn.cur span { color: #ffe08a; }
+  #lvname { font-size: 13px; font-weight: 700; color: #256b38; }
+
+  #status { font-size: 12.5px; color: #3d5c46; background: rgba(255,255,255,.45);
+    border-radius: 10px; padding: 5px 10px; text-align: center; }
+
+  #stage { display: flex; flex-direction: column; align-items: center; }
+  #mouth { width: 92px; text-align: center; font-size: 11px; color: #3d6b4c; font-weight: 700;
+    background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.55));
+    border: 2px solid rgba(255,255,255,.95); border-bottom: none;
+    border-radius: 12px 12px 0 0; padding: 4px 0 7px; z-index: 1; }
+  #bottle { padding: 12px; position: relative;
+    background: linear-gradient(160deg, rgba(255,255,255,.72), rgba(255,255,255,.30));
+    border: 2px solid rgba(255,255,255,.92); border-radius: 22px 22px 34px 34px;
+    box-shadow: 0 12px 28px rgba(30,80,50,.18), inset 0 2px 10px rgba(255,255,255,.85); }
+  #bottle::after { content: ''; position: absolute; top: 6px; left: 14%; width: 10%; height: 82%;
+    background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,0)); border-radius: 40px;
+    transform: rotate(8deg); pointer-events: none; }
+  #boardwrap { position: relative; width: fit-content; }
+  #board { display: grid; }
+  #ents, #fx, #banner { position: absolute; inset: 0; pointer-events: none; }
+  #fx { z-index: 5; } #ents { z-index: 2; } #banner { z-index: 6; }
+
+  .cell { width: var(--cell); height: var(--cell); position: relative; border-radius: 9px;
+    background: rgba(255,255,255,.30); box-shadow: inset 0 0 0 2px rgba(255,255,255,.45);
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cell) * .44); cursor: pointer; }
+  .cell:not(.stone):hover { background: rgba(255,255,255,.55); }
+  .cell.stone { background: rgba(120,130,125,.30); box-shadow: inset 0 0 0 2px rgba(90,100,95,.28); cursor: default; }
+  .cell.preview::after { content: var(--pe); position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cell) * .5); opacity: .38; }
+  .cell.shake { animation: shakeX .3s; }
+  @keyframes shakeX { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+  .entity { position: absolute; left: 0; top: 0; width: var(--cell); height: var(--cell);
+    transition: transform .34s cubic-bezier(.3,1.35,.5,1), filter .4s, opacity .5s;
+    will-change: transform; pointer-events: none; }
+  .entity .body { position: relative; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cell) * .58); line-height: 1;
+    filter: drop-shadow(0 3px 2px rgba(0,60,30,.30)); }
+  .entity.noanim { transition: none !important; }
+  /* FR-19 连击慢动作：移动过渡与进食/咀嚼动画同步放慢 ×2 */
+  #ents.slowmo .entity { transition-duration: .68s, .8s, 1s; }
+  #ents.slowmo .entity.eaten .body { animation-duration: .84s; }
+  #ents.slowmo .entity.chomp .body { animation-duration: .6s; }
+  .entity.pop .body { animation: popIn .32s ease-out; }
+  @keyframes popIn { from { transform: scale(.15); } 70% { transform: scale(1.18); } }
+  .entity.eaten .body { animation: eatenOut .42s ease-in forwards; }
+  @keyframes eatenOut { 40% { transform: scale(1.35) rotate(14deg); opacity: 1; }
+                        100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+  .entity.chomp .body { animation: chompB .3s; }
+  @keyframes chompB { 45% { transform: scale(1.22); } }
+  .entity.fat { filter: drop-shadow(0 0 8px rgba(255,196,50,.95)); }
+  .entity.fat .body { animation: fatPulse 1.25s ease-in-out infinite; }
+  @keyframes fatPulse { 50% { transform: scale(1.13); } }
+  .entity.fat .body::after { content: '✨'; position: absolute; top: calc(var(--cell) * -.03);
+    right: calc(var(--cell) * .01); font-size: calc(var(--cell) * .24); }
+  .entity.fly { transition: transform .85s ease-in, opacity .85s ease-in; opacity: 0; z-index: 4; }
+  .entity.leave { transition: transform .8s ease-in, opacity .8s ease-in; opacity: 0; }
+  .pips { position: absolute; bottom: calc(var(--cell) * .045); left: 0; right: 0;
+    display: flex; justify-content: center; gap: 3px; }
+  .pips i { width: calc(var(--cell) * .09); height: calc(var(--cell) * .09); border-radius: 50%;
+    background: rgba(255,255,255,.8); box-shadow: inset 0 0 0 1px rgba(0,80,40,.4); }
+  .pips i.on { background: #ffd75e; box-shadow: 0 0 5px rgba(255,190,40,.9); }
+
+  .ft { position: absolute; z-index: 7; font-weight: 800; font-size: 14px; color: #237a37;
+    text-shadow: 0 1px 0 #fff, 0 0 6px #fff; white-space: nowrap;
+    transform: translate(-50%, 0); animation: ftUp .95s ease-out forwards; pointer-events: none; }
+  @keyframes ftUp { 0% { opacity: 0; margin-top: 8px; } 25% { opacity: 1; }
+                    100% { opacity: 0; margin-top: -34px; } }
+
+  #banner { display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 900; color: #1f6d33;
+    text-shadow: 0 2px 0 #fff, 0 5px 16px rgba(0,80,40,.35); opacity: 0; }
+  #banner.show { animation: bannerPop 1.05s; }
+  @keyframes bannerPop { 0% { opacity: 0; transform: scale(.4); }
+    25% { opacity: 1; transform: scale(1.14); } 65% { transform: scale(1); opacity: 1; }
+    100% { opacity: 0; transform: scale(1); } }
+
+  /* 新规则引入卡（v0.8）：首次出现新规则的关卡，进关时弹出 */
+  .panel .intro-icon { font-size: 46px; line-height: 1.1; margin: 2px 0 6px; }
+  .panel .intro-tag { display: inline-block; font-size: 11px; font-weight: 800; color: #fff;
+    background: #e8902a; border-radius: 10px; padding: 1px 9px; margin-bottom: 6px; }
+
+  #hand { display: flex; gap: 12px; justify-content: center; align-items: center; min-height: 96px;
+    flex-wrap: wrap; }
+  .card { width: 80px; padding: 9px 6px 7px; background: linear-gradient(170deg, #ffffff, #edf6ef);
+    border: 2px solid #cfe3d4; border-radius: 15px; display: flex; flex-direction: column;
+    align-items: center; gap: 3px; cursor: pointer; position: relative;
+    box-shadow: 0 4px 10px rgba(30,80,50,.14); transition: .16s; }
+  .card .ce { font-size: 36px; line-height: 1.05; }
+  .card .cn { font-size: 12px; color: #4a6b52; font-weight: 700; }
+  .card .cx { position: absolute; top: -8px; right: -8px; background: #2f8c46; color: #fff;
+    font-size: 11px; font-weight: 800; border-radius: 10px; padding: 1px 7px;
+    box-shadow: 0 2px 5px rgba(20,80,40,.3); }
+  .card.sel { border-color: #ffb42e; background: linear-gradient(170deg, #fffbea, #fff2cc);
+    box-shadow: 0 7px 18px rgba(255,170,40,.4); transform: translateY(-5px); }
+  .card:not(.sel):not(.lock):hover { transform: translateY(-2px); }
+  /* FR-17 固定顺序：非队首牌禁用 + 序号角标 */
+  .card.lock { opacity: .5; filter: grayscale(.6); cursor: not-allowed; }
+  .card .cq { position: absolute; top: -8px; left: -8px; background: #ffb42e; color: #fff;
+    font-size: 13px; font-weight: 800; border-radius: 50%; width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(160,100,20,.3); }
+  .card.lock .cq { background: #9bb0a1; }
+  .nocard { font-size: 13px; color: #6b8172; }
+
+  #controls { display: flex; gap: 10px; justify-content: center; }
+  .btn { padding: 9px 18px; border-radius: 13px; border: 2px solid #cfe3d4; background: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer; color: #2d4a35; transition: .15s; }
+  .btn:disabled { opacity: .38; cursor: default; }
+  .btn.primary { background: #2f8c46; color: #fff; border-color: #2f8c46; }
+  .btn:not(:disabled):hover { transform: translateY(-1px); }
+
+  footer { text-align: center; font-size: 10.5px; color: rgba(40,70,50,.5); }
+
+  #modal { position: fixed; inset: 0; background: rgba(18,45,28,.5); display: none;
+    align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(2px); }
+  #modal.show { display: flex; }
+  .panel { background: #fdfefc; border-radius: 20px; padding: 22px 24px; max-width: 330px; width: 88%;
+    text-align: center; box-shadow: 0 20px 50px rgba(0,40,20,.4); animation: panelIn .25s ease-out;
+    max-height: 82vh; overflow-y: auto; }
+  @keyframes panelIn { from { transform: scale(.8); opacity: 0; } }
+  .panel h2 { font-size: 20px; color: #1f6d33; margin-bottom: 8px; }
+  .panel .stars { font-size: 36px; letter-spacing: 5px; margin: 4px 0; color: #f2b12c; }
+  .panel p { font-size: 13px; color: #5a7263; margin-bottom: 16px; line-height: 1.7; text-align: left; }
+  .panel p.tc { text-align: center; }
+  .panel .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  #toast { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
+    background: rgba(28,58,38,.88); color: #fff; padding: 9px 18px; border-radius: 13px;
+    font-size: 13px; opacity: 0; transition: opacity .25s; z-index: 60; pointer-events: none;
+    white-space: nowrap; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>生态链<span class="sub">EcoLoop · 瓶中食物链</span></h1>
+    <div class="hbtns">
+      <button id="soundBtn" class="iconbtn" title="音效开关">🔊</button>
+      <button id="helpBtn" class="iconbtn" title="玩法说明">❓</button>
+    </div>
+  </header>
+
+  <div id="levelrow">
+    <div id="levelbar"></div>
+    <div id="lvname"></div>
+  </div>
+
+  <div id="status"></div>
+
+  <div id="stage">
+    <div id="mouth">🕊️ 放归口</div>
+    <div id="bottle">
+      <div id="boardwrap">
+        <div id="board"></div>
+        <div id="ents"></div>
+        <div id="fx"></div>
+        <div id="banner"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="hand"></div>
+
+  <div id="controls">
+    <button id="undoBtn" class="btn">↩ 悔一步</button>
+    <button id="restartBtn" class="btn">🔄 重开本关</button>
+  </div>
+
+  <footer>生态链 · EcoLoop Demo v0.14 · 乐信圣文 AI 休闲游戏创作大赛 · 单文件离线可玩</footer>
+</div>
+
+<div id="modal"><div class="panel" id="panelBox"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ============================================================
+ * 生态链 · EcoLoop —— 玩法核心（v0.14 Demo，50 关）
+ * v0.11（2026-11-14）：E组L21–L30入库，fixed×2/6×6×3/等待草/首步5连；回放留150ms绘制余量。
+ * v0.10（开发计划阶段 D）：D 组 L12–L20「结构九式」入库（intro 新卡×3：吃饱卡位 /
+ *       你放的鹰 / 草的义务豁免；theme:'D' 分章）；盘面经 D组候选_v1~v18 迭代 +
+ *       求解器逐关验证 optimal==par，解数/节点台账见《EcoLoop_关卡台账.md》
+ * v0.9（开发计划阶段 0，对应《EcoLoop_12-50关开发计划.md》）：FR-22 选关分章分页
+ *       （levelbar 章标签 + 分页，50 关 360px 可用）；FR-27 关卡元数据 theme（非玩法
+ *       字段，仅选关 UI 读取）；FR-19 慢动作自适应（≥4 连「落牌+回放+横幅」≤4s）；
+ *       newGameState 支持预置 fat/fatSince（L15 前置，纯初始化层，引擎零改动）
+ * v0.8（对应 SPEC v1.7 / UI 调整）：取消「有用格」橙色呼吸描边；去掉盘面下方提示条（tip 文案
+ *       保留在关卡数据中，不再渲染）；新增「新规则引入卡」LevelDef.intro（L4 石头 / L5 鹰吃兔 /
+ *       L11 固定顺序），进关弹出、重开不重复
+ * v0.7（对应 SPEC v1.6 / M3-1、M3-2）：FR-19 连击慢动作（≥4 连事件间隔 ×2 + 进食音按大调
+ *       音阶递进，横幅「超级连锁」）；静音偏好持久化（eatfly_muted，读写 try/catch 降级）
+ * v0.6（对应 SPEC v1.5 / M2）：FR-17 固定手牌顺序——LevelDef.order/seq、GameState.queue；
+ *       canPlay/takeCard 统一出牌判定（交互/自检/求解器共用，resolve 不感知顺序）；
+ *       试点关 L11「照谱做菜」+ U25（?test 23 条 / 11 关）
+ * v0.5（对应 SPEC v1.4 / M1）：盘满判负（§3.4-4，loseReason）+ T1 引擎用例补齐
+ *       U01–U16 与 U24（?test 22 条；harness 增 settle / repeat / 预置 fatSince）
+ * v0.4（对应 SPEC v1.3）：C 组 L6–10（谁先吃 / 窄口沙漏 / 浪费的诱惑 / 鹰的餐桌 /
+ *       一步起飞）+ 胜利判定修复：草不计入（对齐 §3.4 FAQ，v0.2 起未吃的草会误阻断胜利）
+ * v0.3（玩法 v2.2 多猎物）：prey 改列表，鹰同时吃「狐+兔」；猎物偏好键
+ *       「吃饱 > 营养级 > 阅读序」；L5 因鹰抢食肥兔重设计（par 2→3）
+ * 规则：放牌 → 「开饭循环」结算（鹰→狐→兔，各吃一口、走到猎物格；
+ *       刚吃饱的猎物会被相邻天敌当场吃掉——即时连锁）→ 吃饱/离开
+ * 胜利：盘面上所有动物离场（被吃掉，或吃饱后离开）
+ * ============================================================ */
+
+/* ---------- 基础数据 ---------- */
+/* prey：猎物列表（v2.2 多猎物——鹰同时吃狐与兔）；tier：营养级（草0<兔1<狐2<鹰3），
+   仅用于「吃饱 > 营养级 > 阅读序」的猎物偏好排序，不参与其他判定 */
+const SPECIES = {
+  grass : { name: '草',   emoji: '🌿', prey: [],                need: 0, tier: 0 },
+  bug: { name: '虫子', emoji: '🐛', prey: ['grass'], need: 2, tier: 1 },
+  frog: { name: '青蛙', emoji: '🐸', prey: ['bug'], need: 3, tier: 2 },
+  rabbit: { name: '兔子', emoji: '🐇', prey: ['grass'],         need: 2, tier: 1 },
+  fox   : { name: '狐狸', emoji: '🦊', prey: ['rabbit'],        need: 3, tier: 2 },
+  eagle : { name: '老鹰', emoji: '🦅', prey: ['fox', 'frog', 'rabbit'], need: 4, tier: 3 },
+};
+const ORDER = [['eagle'], ['fox', 'frog'], ['rabbit', 'bug']];      // 结算顺序：食物链从高到低
+const DIRS  = [[-1,0],[1,0],[0,-1],[0,1]];     // 上下左右四邻
+
+const LEVELS = [
+  {
+    "name": "吃到就前进",
+    "w": 3,
+    "h": 3,
+    "hand": {
+      "grass": 3
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "stones": [],
+    "par": 2,
+    "theme": "启程",
+    "tip": "放草后兔子会走到草的位置。第二株草要挨着它的新位置。"
+  },
+  {
+    "name": "最后一口在哪",
+    "w": 3,
+    "h": 3,
+    "hand": {
+      "grass": 2
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 1,
+        "sat": 1
+      }
+    ],
+    "stones": [],
+    "par": 2,
+    "theme": "启程",
+    "tip": "先找狐狸身边的最后一格，再倒推兔子的两口草。肥兔能给狐狸补两口。"
+  },
+  {
+    "name": "第一个岔路",
+    "w": 4,
+    "h": 3,
+    "hand": {
+      "grass": 2
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 0,
+        "c": 2,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        1,
+        2
+      ]
+    ],
+    "par": 2,
+    "theme": "启程",
+    "tip": "石头不能放牌。几个方向都能吃到第一口，但只有部分路线能把第二口送到狐狸旁。"
+  },
+  {
+    "name": "自己排顺序",
+    "w": 4,
+    "h": 4,
+    "par": 3,
+    "animals": [
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "stones": [],
+    "tip": "这次由你决定出牌顺序。狐狸需要一只肥兔加一只小兔，先想两顿饭分别在哪里。",
+    "hand": {
+      "grass": 2,
+      "rabbit": 1
+    },
+    "theme": "启程"
+  },
+  {
+    "name": "提前摆盘",
+    "w": 4,
+    "h": 4,
+    "par": 3,
+    "order": "fixed",
+    "seq": [
+      "grass",
+      "rabbit",
+      "grass"
+    ],
+    "animals": [
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "stones": [],
+    "tip": "牌序是草、兔、草。第二张兔子先摆好，等狐狸吃完肥兔后再吃这张小兔。",
+    "theme": "启程",
+    "intro": {
+      "icon": "🔢",
+      "title": "先摆好，再开饭",
+      "text": "本关按<b>草→兔→草</b>出牌。动物可以先放在暂时吃不到的位置，等后续连锁来接。"
+    }
+  },
+  {
+    "name": "别喂错对象",
+    "w": 4,
+    "h": 4,
+    "par": 3,
+    "hand": {
+      "grass": 2,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 0,
+        "sat": 2
+      },
+      {
+        "sp": "fox",
+        "r": 0,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [],
+    "tip": "鹰也吃兔子。先看兔子的发福位置属于谁，再为狐狸留够营养。",
+    "theme": "启程",
+    "intro": {
+      "icon": "🦅",
+      "title": "鹰也会吃兔子",
+      "text": "鹰需要<b>4口</b>，会吃狐、蛙和兔；肥猎物算2口。看好谁会先吃到主菜。"
+    }
+  },
+  {
+    "name": "留给下一口",
+    "w": 4,
+    "h": 4,
+    "par": 3,
+    "hand": {
+      "grass": 2,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 2
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "tip": "眼前能吃到还不够。每吃一口都会换位置，给下一张牌留下相邻格。",
+    "theme": "启程"
+  },
+  {
+    "name": "先养谁",
+    "w": 4,
+    "h": 5,
+    "hand": {
+      "grass": 2,
+      "rabbit": 2
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 4,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 4,
+        "c": 2,
+        "sat": 2
+      }
+    ],
+    "stones": [
+      [
+        1,
+        3
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        3,
+        2
+      ]
+    ],
+    "par": 4,
+    "theme": "启程",
+    "tip": "两只狐狸缺的口数不同。两株草和两张兔牌要分开记账，别把补给全送到一边。"
+  },
+  {
+    "name": "把鹰引回来",
+    "w": 4,
+    "h": 5,
+    "par": 4,
+    "hand": {
+      "grass": 2,
+      "rabbit": 2
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 4,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [],
+    "tip": "兔牌不仅是食物，也能移动老鹰。先安排狐狸的肥兔，再让鹰在窗口内收下肥狐。",
+    "theme": "启程"
+  },
+  {
+    "name": "分路与接力",
+    "w": 5,
+    "h": 4,
+    "hand": {
+      "grass": 4,
+      "rabbit": 2
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 4,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "par": 6,
+    "theme": "启程",
+    "tip": "开局没有动物会自行捕食。两只兔子共享草，两只狐狸与鹰争用兔牌。先反推鹰的收尾位置，再决定把草铺到哪一条路、把兔牌留给谁。"
+  },
+  {
+    "name": "一触即发",
+    "w": 4,
+    "h": 3,
+    "hand": {
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 1,
+        "sat": 2
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 1,
+        "sat": 2
+      }
+    ],
+    "stones": [],
+    "par": 1,
+    "theme": "湿地",
+    "tip": "休息一下：一张兔牌，能否让狐狸和老鹰连续吃饱？"
+  },
+  {
+    "name": "虫子的路",
+    "w": 3,
+    "h": 3,
+    "hand": {
+      "grass": 2
+    },
+    "animals": [
+      {
+        "sp": "bug",
+        "r": 1,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "stones": [],
+    "par": 2,
+    "theme": "湿地",
+    "tip": "新朋友虫子也吃草，两口就饱。先观察它吃一口后停在哪里。",
+    "intro": {
+      "icon": "🐛",
+      "title": "草的另一位食客",
+      "text": "虫子吃相邻的草，<b>2口吃饱</b>。它和兔子同层，按从上到下、从左到右进食。"
+    }
+  },
+  {
+    "name": "青蛙的晚餐",
+    "w": 4,
+    "h": 3,
+    "hand": {
+      "grass": 2
+    },
+    "animals": [
+      {
+        "sp": "bug",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 2,
+        "c": 1,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        1,
+        2
+      ]
+    ],
+    "par": 2,
+    "theme": "湿地",
+    "tip": "青蛙只吃虫子，需要三口。这里青蛙已有一口，肥虫正好补两口。",
+    "intro": {
+      "icon": "🐸",
+      "title": "虫子交给青蛙",
+      "text": "青蛙只吃虫，<b>3口吃饱</b>；肥虫提供2口。鹰也能吃青蛙，狐与蛙同层按阅读顺序行动。"
+    }
+  },
+  {
+    "name": "两位食客",
+    "w": 4,
+    "h": 4,
+    "hand": {
+      "grass": 3,
+      "bug": 1
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 3,
+        "c": 3,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "par": 4,
+    "theme": "湿地",
+    "tip": "兔子与虫子都吃草，同层从上到下、从左到右。中间那格草会被谁先吃？先安排两位食客各自的路线。"
+  },
+  {
+    "name": "两路备餐",
+    "w": 4,
+    "h": 4,
+    "theme": "湿地",
+    "hand": {
+      "grass": 4,
+      "bug": 1
+    },
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 2,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        0,
+        3
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "par": 5,
+    "tip": "两条支线共享四株草。兔子和虫子会争同一格食物，分别安排好送往狐狸与青蛙的终点。"
+  },
+  {
+    "name": "窄口",
+    "w": 4,
+    "h": 4,
+    "par": 4,
+    "hand": {
+      "grass": 3,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 3,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ]
+    ],
+    "theme": "湿地"
+  },
+  {
+    "name": "两路分粮",
+    "w": 4,
+    "h": 5,
+    "hand": {
+      "grass": 3,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 4,
+        "c": 2,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        1,
+        3
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "par": 4,
+    "theme": "湿地",
+    "tip": "两条食物链各有终点，但共用三株草。先算兔子和虫子分别还差几口，再分配兔牌。"
+  },
+  {
+    "name": "两条链一张桌",
+    "w": 5,
+    "h": 4,
+    "hand": {
+      "grass": 4
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "par": 4,
+    "theme": "湿地",
+    "tip": "狐狸与青蛙都要吃到肥猎物，鹰再吃两位肥食客。最后两株草的次序决定能否在同一回合汇合。"
+  },
+  {
+    "name": "先收哪一边",
+    "w": 5,
+    "h": 5,
+    "hand": {
+      "grass": 4,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 0,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        4
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "par": 5,
+    "theme": "湿地",
+    "tip": "多一张兔牌不代表多余：它要把狐狸引回接菜的位置。先想兔子、狐狸、鹰各自的停点。"
+  },
+  {
+    "name": "生态交汇",
+    "w": 5,
+    "h": 5,
+    "hand": {
+      "grass": 4,
+      "bug": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 4,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "par": 5,
+    "theme": "湿地",
+    "tip": "虫牌既能给青蛙补一口，也会改变它的落点。安排两条链相继完成，让鹰在窗口内收下肥狐与肥蛙。"
+  },
+  {
+    "name": "两条河",
+    "w": 5,
+    "h": 5,
+    "par": 5,
+    "theme": "E",
+    "hand": {
+      "grass": 4,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 0,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 4,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 4,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        2
+      ]
+    ]
+  },
+  {
+    "name": "上菜的次序",
+    "w": 5,
+    "h": 5,
+    "par": 4,
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 4,
+        "c": 3,
+        "sat": 2
+      }
+    ],
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "tip": "兔、草、兔、草。先来的兔牌不一定马上喂给狐狸；提前摆盘，让后来的草把主菜送到桌边。",
+    "order": "fixed",
+    "seq": [
+      "rabbit",
+      "grass",
+      "rabbit",
+      "grass"
+    ],
+    "theme": "E"
+  },
+  {
+    "name": "墙里墙外",
+    "w": 5,
+    "h": 5,
+    "par": 5,
+    "theme": "E",
+    "hand": {
+      "grass": 4,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "eagle",
+        "r": 2,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 4,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "tip": "先把兔牌送给狐狸补一口。左边的兔子在墙外喂肥、送给狐狸，别让鹰提前抢；再让右边兔子沿草链发福，故意给鹰吃掉。鹰最后再收下肥狐，防抢与用抢缺一不可。"
+  },
+  {
+    "name": "大草原",
+    "w": 6,
+    "h": 6,
+    "par": 5,
+    "theme": "E",
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "eagle",
+        "r": 2,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 4,
+        "c": 1,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        5,
+        5
+      ]
+    ],
+    "hand": {
+      "grass": 1,
+      "rabbit": 4
+    }
+  },
+  {
+    "name": "回马枪",
+    "w": 5,
+    "h": 5,
+    "par": 2,
+    "theme": "E",
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 4,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 3,
+        "sat": 2
+      }
+    ],
+    "stones": [],
+    "tip": "第一株草先把兔子引到狐狸嘴边，第二张兔牌让老鹰回身收下肥狐。两步收官，先算好落点。",
+    "hand": {
+      "grass": 1,
+      "rabbit": 1
+    }
+  },
+  {
+    "name": "空席",
+    "w": 4,
+    "h": 4,
+    "hand": {
+      "grass": 2,
+      "bug": 1,
+      "frog": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 1,
+        "sat": 2
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        3
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "theme": "E",
+    "par": 4
+  },
+  {
+    "name": "二度照谱",
+    "w": 5,
+    "h": 5,
+    "par": 5,
+    "animals": [
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 2,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "tip": "兔、草、鹰、兔、草。鹰牌落在谱子正中：把它摆进能吃到下一口的位置，等最后一株草触发整条链。",
+    "order": "fixed",
+    "seq": [
+      "rabbit",
+      "grass",
+      "eagle",
+      "rabbit",
+      "grass"
+    ],
+    "theme": "E"
+  },
+  {
+    "name": "两位猎手",
+    "w": 5,
+    "h": 4,
+    "hand": {
+      "grass": 3,
+      "rabbit": 1
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 2,
+        "sat": 2
+      },
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 2,
+        "sat": 2
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 4,
+        "sat": 1
+      }
+    ],
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "theme": "E",
+    "par": 4
+  },
+  {
+    "name": "两份口粮",
+    "w": 4,
+    "h": 5,
+    "theme": "E",
+    "hand": {
+      "grass": 3,
+      "bug": 2
+    },
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 3,
+        "sat": 0
+      }
+    ],
+    "stones": [
+      [
+        0,
+        3
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "par": 5
+  },
+  {
+    "name": "草原塌方",
+    "w": 6,
+    "h": 6,
+    "par": 5,
+    "theme": "E",
+    "hand": {
+      "grass": 5
+    },
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 0,
+        "c": 4,
+        "sat": 2
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 5,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "grass",
+        "r": 5,
+        "c": 1
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 1,
+        "sat": 2
+      },
+      {
+        "sp": "rabbit",
+        "r": 4,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "grass",
+        "r": 3,
+        "c": 4
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 5,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 5,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 5,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 5,
+        "c": 2,
+        "sat": 2
+      }
+    ],
+    "stones": [
+      [
+        4,
+        1
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        4,
+        2
+      ]
+    ],
+    "tip": "五个引信位，第一步可点燃五次进食。把独立的小链接成一场塌方，再依次收好后面的尾声。"
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 1,
+        "sat": 1
+      }
+    ],
+    "hand": {
+      "grass": 2,
+      "rabbit": 2
+    },
+    "stones": [
+      [
+        0,
+        2
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "name": "先喂哪一口",
+    "par": 4
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 3,
+        "c": 3,
+        "sat": 2
+      },
+      {
+        "sp": "frog",
+        "r": 2,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 2,
+      "bug": 1
+    },
+    "stones": [
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        2
+      ]
+    ],
+    "name": "让出饭桌",
+    "par": 3
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "bug": 1,
+      "rabbit": 1
+    },
+    "stones": [
+      [
+        2,
+        0
+      ]
+    ],
+    "name": "门口不是终点",
+    "par": 5
+  },
+  {
+    "w": 5,
+    "h": 5,
+    "animals": [
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 4,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 1
+      }
+    ],
+    "hand": {
+      "grass": 4,
+      "bug": 1
+    },
+    "stones": [
+      [
+        4,
+        0
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        0,
+        3
+      ]
+    ],
+    "name": "同一株草",
+    "par": 5
+  },
+  {
+    "w": 5,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 3,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 4,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "rabbit": 2
+    },
+    "stones": [
+      [
+        3,
+        4
+      ],
+      [
+        0,
+        3
+      ]
+    ],
+    "name": "留一口",
+    "par": 5
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 0,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 2,
+        "sat": 1
+      }
+    ],
+    "hand": {
+      "grass": 3
+    },
+    "stones": [],
+    "name": "小小回环",
+    "par": 3
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 4
+    },
+    "stones": [
+      [
+        1,
+        0
+      ]
+    ],
+    "name": "接力换手",
+    "par": 4
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 3,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "grass",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "bug": 1,
+      "rabbit": 1
+    },
+    "stones": [
+      [
+        3,
+        0
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "name": "先上冷盘",
+    "order": "fixed",
+    "seq": [
+      "grass",
+      "grass",
+      "rabbit",
+      "bug",
+      "grass"
+    ],
+    "par": 5
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 0,
+        "sat": 1
+      }
+    ],
+    "hand": {
+      "grass": 2,
+      "bug": 3
+    },
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "name": "争先之后",
+    "par": 5
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 2,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 4,
+      "rabbit": 1,
+      "bug": 1
+    },
+    "stones": [
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "name": "合流之前",
+    "par": 6
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "rabbit": 1
+    },
+    "stones": [
+      [
+        0,
+        3
+      ],
+      [
+        3,
+        3
+      ]
+    ],
+    "name": "两口之间",
+    "par": 4
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 2,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 4
+    },
+    "stones": [],
+    "name": "错开的饭点",
+    "par": 4
+  },
+  {
+    "name": "一格两用",
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 1,
+        "sat": 2
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 2,
+      "rabbit": 1
+    },
+    "stones": [],
+    "par": 3
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 2,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 3,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 2,
+        "sat": 1
+      }
+    ],
+    "hand": {
+      "grass": 1,
+      "rabbit": 2
+    },
+    "stones": [
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "name": "借一步",
+    "par": 3
+  },
+  {
+    "name": "尚未开席",
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 2,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "grass",
+        "r": 0,
+        "c": 0,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "rabbit": 1,
+      "bug": 1
+    },
+    "order": "fixed",
+    "seq": [
+      "grass",
+      "grass",
+      "grass",
+      "rabbit",
+      "bug"
+    ],
+    "stones": [
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "par": 5
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 3,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 2,
+      "rabbit": 3
+    },
+    "stones": [
+      [
+        1,
+        3
+      ]
+    ],
+    "name": "先吃哪一种",
+    "par": 5
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 3,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 0,
+        "sat": 1
+      },
+      {
+        "sp": "bug",
+        "r": 2,
+        "c": 3,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "bug": 2
+    },
+    "stones": [
+      [
+        3,
+        3
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        0
+      ]
+    ],
+    "name": "谁来让路",
+    "par": 5
+  },
+  {
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 3,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 3,
+        "c": 3,
+        "sat": 2
+      },
+      {
+        "sp": "rabbit",
+        "r": 2,
+        "c": 2,
+        "sat": 1
+      },
+      {
+        "sp": "rabbit",
+        "r": 1,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 3
+    },
+    "stones": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "name": "最后的准备",
+    "par": 3
+  },
+  {
+    "name": "两次经过",
+    "w": 4,
+    "h": 5,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 0,
+        "sat": 0
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 4,
+        "c": 1,
+        "sat": 0
+      }
+    ],
+    "hand": {
+      "grass": 4,
+      "rabbit": 1
+    },
+    "stones": [
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        3,
+        2
+      ]
+    ],
+    "par": 5
+  },
+  {
+    "name": "各有归处",
+    "w": 4,
+    "h": 4,
+    "animals": [
+      {
+        "sp": "eagle",
+        "r": 1,
+        "c": 0,
+        "sat": 2
+      },
+      {
+        "sp": "fox",
+        "r": 2,
+        "c": 1,
+        "sat": 1
+      },
+      {
+        "sp": "fox",
+        "r": 1,
+        "c": 2,
+        "sat": 0
+      },
+      {
+        "sp": "frog",
+        "r": 0,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "bug",
+        "r": 3,
+        "c": 1,
+        "sat": 0
+      },
+      {
+        "sp": "rabbit",
+        "r": 3,
+        "c": 3,
+        "sat": 1
+      }
+    ],
+    "hand": {
+      "grass": 3,
+      "rabbit": 1
+    },
+    "stones": [],
+    "par": 4,
+    "order": "fixed",
+    "seq": [
+      "grass",
+      "grass",
+      "rabbit",
+      "grass"
+    ]
+  }
+];
+
+/* 每关的一步解（自检用，?test 打开时自动验证） */
+const SOLUTIONS = [
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "grass",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "grass",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "grass",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "grass",
+      1,
+      0
+    ],
+    [
+      "rabbit",
+      0,
+      0
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "rabbit",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      0
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      2
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "rabbit",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "rabbit",
+      1,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      2,
+      0
+    ],
+    [
+      "grass",
+      3,
+      0
+    ],
+    [
+      "rabbit",
+      4,
+      0
+    ],
+    [
+      "rabbit",
+      4,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      3,
+      0
+    ],
+    [
+      "rabbit",
+      1,
+      0
+    ],
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "rabbit",
+      2,
+      0
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "rabbit",
+      1,
+      3
+    ],
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "rabbit",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "grass",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "grass",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      3
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "bug",
+      2,
+      3
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      1,
+      3
+    ],
+    [
+      "bug",
+      0,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "grass",
+      2,
+      3
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "rabbit",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "rabbit",
+      1,
+      0
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "grass",
+      3,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "rabbit",
+      1,
+      0
+    ],
+    [
+      "grass",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "bug",
+      1,
+      3
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "grass",
+      0,
+      2
+    ],
+    [
+      "grass",
+      0,
+      4
+    ],
+    [
+      "grass",
+      1,
+      4
+    ],
+    [
+      "rabbit",
+      2,
+      4
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      3,
+      3
+    ],
+    [
+      "grass",
+      2,
+      1
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      0,
+      3
+    ],
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      0,
+      2
+    ],
+    [
+      "grass",
+      1,
+      3
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "rabbit",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      2,
+      1
+    ],
+    [
+      "rabbit",
+      3,
+      1
+    ],
+    [
+      "rabbit",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      3
+    ],
+    [
+      "rabbit",
+      0,
+      3
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "frog",
+      2,
+      3
+    ],
+    [
+      "bug",
+      1,
+      3
+    ],
+    [
+      "grass",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      2,
+      1
+    ],
+    [
+      "grass",
+      1,
+      0
+    ],
+    [
+      "eagle",
+      2,
+      0
+    ],
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      2,
+      0
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      3
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "rabbit",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "bug",
+      0,
+      0
+    ],
+    [
+      "bug",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      3,
+      0
+    ],
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "grass",
+      3,
+      3
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      1,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "bug",
+      2,
+      3
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      2,
+      1
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "bug",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "grass",
+      4,
+      1
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "bug",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "rabbit",
+      2,
+      3
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "grass",
+      1,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      3,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "grass",
+      3,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      0,
+      0
+    ],
+    [
+      "grass",
+      1,
+      0
+    ],
+    [
+      "rabbit",
+      0,
+      1
+    ],
+    [
+      "bug",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "bug",
+      0,
+      1
+    ],
+    [
+      "bug",
+      1,
+      0
+    ],
+    [
+      "grass",
+      2,
+      0
+    ],
+    [
+      "bug",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "bug",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "rabbit",
+      3,
+      1
+    ],
+    [
+      "grass",
+      0,
+      1
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      0
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      1,
+      2
+    ],
+    [
+      "grass",
+      1,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      2,
+      2
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "grass",
+      2,
+      2
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ]
+  ],
+  [
+    [
+      "rabbit",
+      1,
+      0
+    ],
+    [
+      "grass",
+      1,
+      2
+    ],
+    [
+      "rabbit",
+      1,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      0
+    ],
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "rabbit",
+      3,
+      1
+    ],
+    [
+      "bug",
+      0,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      0,
+      2
+    ],
+    [
+      "rabbit",
+      0,
+      1
+    ],
+    [
+      "rabbit",
+      1,
+      2
+    ],
+    [
+      "rabbit",
+      2,
+      1
+    ]
+  ],
+  [
+    [
+      "bug",
+      0,
+      0
+    ],
+    [
+      "bug",
+      0,
+      2
+    ],
+    [
+      "grass",
+      0,
+      3
+    ],
+    [
+      "grass",
+      1,
+      0
+    ],
+    [
+      "grass",
+      1,
+      3
+    ]
+  ],
+  [
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "grass",
+      3,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ],
+    [
+      "grass",
+      3,
+      1
+    ],
+    [
+      "grass",
+      2,
+      1
+    ]
+  ],
+  [
+    [
+      "grass",
+      1,
+      1
+    ],
+    [
+      "grass",
+      2,
+      3
+    ],
+    [
+      "rabbit",
+      2,
+      2
+    ],
+    [
+      "grass",
+      2,
+      1
+    ]
+  ]
+];
+
+/* ---------- 全局状态 ---------- */
+let S = null;        // 当前关卡状态
+let CELL = 60;       // 格子边长(px)
+let sel = null;      // 当前选中的手牌物种
+let busy = false;    // 结算/动画中，锁输入
+let idSeq = 1;
+let elMap = {};      // 动物id -> DOM元素
+let muted = false;   // M3-2：静音偏好持久化（eatfly_muted；隐私模式下读写失败即降级为默认开声）
+try { muted = localStorage.getItem('eatfly_muted') === '1'; } catch (e) { muted = false; }
+// v0.12: old L1–L20 stars describe different puzzles. Preserve a copy; retain E progress.
+try { if(localStorage.getItem('eatfly_campaign') !== 'redesign-v1') { const old=localStorage.getItem('eatfly_stars'); if(old) { if(!localStorage.getItem('eatfly_stars_pre_redesign'))localStorage.setItem('eatfly_stars_pre_redesign',old); const p=JSON.parse(old), kept={}; for(const k of Object.keys(p))if(+k>=20)kept[k]=p[k]; localStorage.setItem('eatfly_stars',JSON.stringify(kept)); } localStorage.setItem('eatfly_campaign','redesign-v1'); localStorage.setItem('eatfly_last','0'); } } catch(e) {}
+// L10 v2: preserve prior achievement before resetting only the replaced puzzle.
+try{if(localStorage.getItem('eatfly_l10_revision')!=='3'){const raw=localStorage.getItem('eatfly_stars');if(raw){const p=JSON.parse(raw);if(p[9]!==undefined){localStorage.setItem('eatfly_l10_oldstar_v2',String(p[9]));delete p[9];localStorage.setItem('eatfly_stars',JSON.stringify(p));}}localStorage.setItem('eatfly_l10_revision','3');}}catch(e){}
+// Swap L4/L5 achievements once so stars follow their original puzzles.
+try{if(localStorage.getItem('eatfly_swap45')!=='1'){const raw=localStorage.getItem('eatfly_stars');if(raw){const p=JSON.parse(raw),a=p[3],b=p[4];delete p[3];delete p[4];if(b!==undefined)p[3]=b;if(a!==undefined)p[4]=a;localStorage.setItem('eatfly_stars',JSON.stringify(p));}const last=localStorage.getItem('eatfly_last');if(last==='3')localStorage.setItem('eatfly_last','4');else if(last==='4')localStorage.setItem('eatfly_last','3');localStorage.setItem('eatfly_swap45','1');}}catch(e){}
+// L15 layout revision: keep a backup and reset only its old achievement.
+try{if(localStorage.getItem('eatfly_l15_revision')!=='2'){const raw=localStorage.getItem('eatfly_stars');if(raw){const p=JSON.parse(raw);if(p[14]!==undefined){localStorage.setItem('eatfly_l15_oldstar',String(p[14]));delete p[14];localStorage.setItem('eatfly_stars',JSON.stringify(p));}}localStorage.setItem('eatfly_l15_revision','2');}}catch(e){}
+// Revised E puzzles: retain prior achievements separately, reset only 26/28/29.
+try{if(localStorage.getItem('eatfly_e_revision')!=='2'){const raw=localStorage.getItem('eatfly_stars');if(raw){const p=JSON.parse(raw),backup={};for(const k of [25,27,28])if(p[k]!==undefined){backup[k]=p[k];delete p[k];}localStorage.setItem('eatfly_e_oldstars',JSON.stringify(backup));localStorage.setItem('eatfly_stars',JSON.stringify(p));}localStorage.setItem('eatfly_e_revision','2');}}catch(e){}
+let prog = {};
+try { prog = JSON.parse(localStorage.getItem('eatfly_stars') || '{}'); } catch (e) { prog = {}; }
+
+const $ = id => document.getElementById(id);
+const boardEl = $('board'), entsEl = $('ents'), fxEl = $('fx'), bannerEl = $('banner');
+const handEl = $('hand'), statusEl = $('status');
+const levelbarEl = $('levelbar'), lvnameEl = $('lvname');
+const undoBtn = $('undoBtn'), restartBtn = $('restartBtn');
+const modalEl = $('modal'), panelBox = $('panelBox'), toastEl = $('toast');
+const wait = ms => new Promise(res => setTimeout(res, ms));
+
+/* ---------- 音效（WebAudio 合成，无素材） ---------- */
+let AC = null;
+function ac() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(f0, f1, dur, type, vol, delay) {
+  if (muted) return;
+  const a = ac(); if (!a) return;
+  try {
+    const t = a.currentTime + (delay || 0);
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t);
+    if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(vol || .12, t);
+    g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + dur + .05);
+  } catch (e) {}
+}
+const sndPlace = () => tone(480, 640, .10, 'triangle', .10);
+const sndEat   = (k = 1) => tone(360 * k, 165 * k, .15, 'square', .05);   // k：FR-19 音阶倍率
+const sndFat   = () => { tone(523,523,.09,'sine',.09); tone(659,659,.09,'sine',.09,.09); tone(784,784,.13,'sine',.09,.18); };
+const sndFly   = () => tone(430, 990, .38, 'sine', .07);
+const sndWin   = () => [523,659,784,1046].forEach((f,i) => tone(f, f, .5, 'sine', .07, i*.12));
+const sndLose  = () => tone(280, 160, .5, 'triangle', .08);
+
+/* ---------- 工具 ---------- */
+/* FR-17：fixed 关的手牌计数由 seq 推出（单一来源，避免 hand 与 seq 不一致） */
+function handOf(seq) {
+  const h = {};
+  for (const sp of seq) h[sp] = (h[sp] || 0) + 1;
+  return h;
+}
+function newGameState(i) {
+  const L = LEVELS[i];
+  const fixed = L.order === 'fixed';
+  return {
+    lv: i, w: L.w, h: L.h, stones: (L.stones || []).map(s => s.slice()),
+    animals: L.animals.map(d => ({
+      id: idSeq++, species: d.sp, r: d.r, c: d.c,
+      satiety: d.sat || 0,
+      /* L15 预置 fat(开发计划 §3.2 技术注):可选 fat/fatSince,纯初始化层扩展——
+       * 引擎用例 harness 的 d.fs 同款语义;不触碰 computeResolution/判定链 */
+      fat: !!d.fat, fatSince: d.fatSince === undefined ? -1 : d.fatSince,
+      dead: false
+    })),
+    hand: fixed ? handOf(L.seq) : Object.assign({}, L.hand),
+    queue: fixed ? L.seq.slice() : null,       // FR-17：剩余出牌队列（free 关为 null）
+    used: 0, released: 0, turn: 0, history: []
+  };
+}
+const isStone  = (r, c) => S.stones.some(s => s[0] === r && s[1] === c);
+const entityAt = (r, c) => S.animals.find(a => !a.dead && a.r === r && a.c === c) || null;
+const handCount = () => Object.values(S.hand).reduce((x, n) => x + n, 0);
+/* FR-17：能否出这张牌——fixed 关只能出队首（顺序只在交互层，computeResolution 不感知） */
+const canPlay = sp => S.hand[sp] > 0 && (!S.queue || S.queue[0] === sp);
+/* 消耗一张牌（placeCard / 自检 / 求解器共用，保证三处语义一致） */
+function takeCard(sp) {
+  S.hand[sp]--;
+  if (S.queue) S.queue.shift();
+  S.used++; S.turn++;
+}
+/* 胜利判定（v0.4 对齐 §3.4 FAQ「剩下的草」）：所有「动物」离场或吃饱；
+ * 草是静态实体、无归宿义务，不计入——v0.2~v0.3 曾把未吃的草算作未达成，属实现 bug */
+const allSettled = () => S.animals.every(a => a.dead || a.fat || a.species === 'grass');
+/* 可放置格：非石头、无存活实体 */
+function emptyCells() {
+  const out = [];
+  for (let r = 0; r < S.h; r++) for (let c = 0; c < S.w; c++)
+    if (!isStone(r, c) && !entityAt(r, c)) out.push([r, c]);
+  return out;
+}
+/* 失败判定（§3.4-3/4，须在胜利判定与离开结算之后调用）：
+ * 'hand' = 手牌用尽；'full' = 手牌 > 0 但瓶子里已无可放格（盘满保护）；null = 继续 */
+function loseReason() {
+  if (handCount() === 0) return 'hand';
+  if (!emptyCells().length) return 'full';
+  return null;
+}
+
+/* ============================================================
+ * 结算（核心算法，纯逻辑、零随机、完全确定）
+ * 每次放置后进入「开饭循环」：每轮鹰→狐→兔各吃一口相邻猎物
+ * 并走到猎物格；吃「吃饱」猎物 +2；吃饱立刻生效（发光）。
+ * 只要一轮里有人吃到东西就再来一轮——刚吃饱的猎物会在下一轮
+ * 被相邻天敌当场吃掉，形成即时连锁，直到一轮无人进食。
+ * 吃饱满一整回合未被吃掉的（旁边没有天敌）→ 回合末离开。
+ * ============================================================ */
+// Same species compete by satiety. Preserve other species' reading-order slots.
+function predatorOrder(group) {
+  const ordered=S.animals.filter(a=>!a.dead&&!a.fat&&group.includes(a.species)).sort((a,b)=>a.r-b.r||a.c-b.c);
+  const queues=new Map(group.map(sp=>[sp,ordered.filter(a=>a.species===sp).sort((a,b)=>b.satiety-a.satiety||a.r-b.r||a.c-b.c)]));
+  return ordered.map(a=>queues.get(a.species).shift());
+}
+function computeResolution(turn) {
+  const events = [];
+  while (true) {
+    let ate = 0;
+    for (const group of ORDER) {
+      // 同级按盘面阅读序（从上到下、从左到右）
+      const preds = predatorOrder(group);
+      for (const p of preds) {
+        if (p.dead || p.fat) continue;             // 可能已被更高级捕食者吃掉，或已吃饱
+        const sp = p.species;
+        const preys = DIRS.map(d => [p.r + d[0], p.c + d[1]])
+          .filter(pos => pos[0] >= 0 && pos[0] < S.h && pos[1] >= 0 && pos[1] < S.w)
+          .map(pos => entityAt(pos[0], pos[1]))
+          .filter(e => e && SPECIES[sp].prey.includes(e.species));
+        if (!preys.length) continue;
+        // 猎物偏好（v2.2 多猎物）：吃饱（一口顶两口）> 营养级（狐>兔）> 阅读序
+        preys.sort((a, b) => (b.fat ? 1 : 0) - (a.fat ? 1 : 0)
+                        || SPECIES[b.species].tier - SPECIES[a.species].tier
+                        || a.r - b.r || a.c - b.c);
+        const prey = preys[0];
+        prey.dead = true;
+        const gain = prey.fat ? 2 : 1;
+        p.satiety += gain;
+        p.r = prey.r; p.c = prey.c;                // 吃完走到猎物的格子
+        events.push({ type: 'eat', pred: p.id, prey: prey.id, gain,
+                      preyFat: !!prey.fat, to: { r: p.r, c: p.c } });
+        ate++;
+        if (!p.fat && p.satiety >= SPECIES[sp].need) {
+          p.fat = true; p.fatSince = turn;         // 吃饱立刻生效，当场就可能被天敌接走
+          events.push({ type: 'fat', id: p.id });
+        }
+      }
+    }
+    if (!ate) break;                               // 无人进食 → 连锁结束
+  }
+  // 吃饱满一整回合且未被吃掉的，回合末离开（由调用方在胜利判定后执行）
+  const flies = S.animals.filter(a => !a.dead && a.fat && a.fatSince >= 0 && a.fatSince < turn)
+                         .map(a => a.id);
+  return { events, flies };
+}
+
+/* ---------- 渲染 ---------- */
+function computeCell() {
+  const bw = Math.min(window.innerWidth, 470) - 56;
+  CELL = Math.max(38, Math.min(66, Math.floor(bw / S.w)));
+  document.documentElement.style.setProperty('--cell', CELL + 'px');
+}
+
+function pipHTML(a) {
+  const need = SPECIES[a.species].need;
+  if (!need) return '';
+  let s = '';
+  for (let i = 0; i < need; i++) s += `<i class="${i < Math.min(a.satiety, need) ? 'on' : ''}"></i>`;
+  return `<div class="pips">${s}</div>`;
+}
+
+function createEntityEl(a, pop) {
+  const el = document.createElement('div');
+  el.className = 'entity ' + a.species + (a.fat ? ' fat' : '');
+  el.innerHTML = `<div class="body"><span>${SPECIES[a.species].emoji}</span>${pipHTML(a)}</div>`;
+  if (pop) el.classList.add('pop');
+  el.style.transform = `translate(${a.c * CELL}px, ${a.r * CELL}px)`;
+  entsEl.appendChild(el);
+  elMap[a.id] = el;
+  if (pop) setTimeout(() => el.classList.remove('pop'), 360);
+}
+
+function setEntityPos(el, r, c) { el.style.transform = `translate(${c * CELL}px, ${r * CELL}px)`; }
+
+/* sat 缺省取终态；演出回放时传入「本事件发生后」的逐步饱食（v0.8 修复：先算后演导致首口就显示终态） */
+function updatePips(id, sat) {
+  const a = S.animals.find(x => x.id === id);
+  const el = elMap[id];
+  if (a && el) {
+    const p = el.querySelector('.pips');
+    if (p) p.outerHTML = pipHTML(sat === undefined ? a : { ...a, satiety: sat });
+  }
+}
+
+function renderBoard() {
+  boardEl.style.gridTemplateColumns = `repeat(${S.w}, var(--cell))`;
+  boardEl.style.width = `calc(${S.w} * var(--cell))`;
+  boardEl.style.height = `calc(${S.h} * var(--cell))`;
+  boardEl.innerHTML = '';
+  for (let r = 0; r < S.h; r++) for (let c = 0; c < S.w; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (isStone(r, c) ? ' stone' : '');
+    cell.dataset.r = r; cell.dataset.c = c;
+    if (isStone(r, c)) cell.textContent = '🪨';
+    boardEl.appendChild(cell);
+  }
+}
+
+const QNUM = '①②③④⑤⑥⑦⑧⑨⑩';
+function renderHand() {
+  // FR-17 fixed：按队列逐张排开，选中态锁定队首，其余禁用 + 序号角标
+  if (S.queue) {
+    sel = S.queue[0] || null;
+    handEl.innerHTML = '';
+    S.queue.forEach((sp, i) => {
+      const d = document.createElement('div');
+      d.className = 'card' + (i === 0 ? ' sel' : ' lock');
+      d.dataset.sp = sp; d.dataset.qi = i;
+      d.innerHTML = `<span class="ce">${SPECIES[sp].emoji}</span><span class="cn">${SPECIES[sp].name}</span><span class="cq">${QNUM[i] || i + 1}</span>`;
+      handEl.appendChild(d);
+    });
+    if (!S.queue.length) handEl.innerHTML = '<div class="nocard">牌用完了…</div>';
+    return;
+  }
+  // 自动选牌：只剩一种时默认选中
+  if (!sel || !(S.hand[sel] > 0)) {
+    sel = null;
+    for (const k of Object.keys(S.hand)) if (S.hand[k] > 0) { sel = k; break; }
+  }
+  handEl.innerHTML = '';
+  let any = false;
+  for (const sp of Object.keys(S.hand)) {
+    const n = S.hand[sp];
+    if (n <= 0) continue;
+    any = true;
+    const d = document.createElement('div');
+    d.className = 'card' + (sel === sp ? ' sel' : '');
+    d.dataset.sp = sp;
+    d.innerHTML = `<span class="ce">${SPECIES[sp].emoji}</span><span class="cn">${SPECIES[sp].name}</span><span class="cx">×${n}</span>`;
+    handEl.appendChild(d);
+  }
+  if (!any) handEl.innerHTML = '<div class="nocard">牌用完了…</div>';
+}
+
+function renderStatus() {
+  statusEl.textContent =
+    `🃏 剩 ${handCount()} 张 · 🕊️ 放归 ${S.released} 只 · 已用 ${S.used} 张（本关最少 ${LEVELS[S.lv].par} 张）`;
+}
+
+/* FR-22 选关分章(50 关 360px 可用):按「连续同 theme」分章,theme 缺省=「基础」(1–11);
+ * theme 是 FR-27 的非玩法元数据,仅选关 UI 读取,引擎/求解器不感知 */
+function levelButton(i) {
+  return '<button class="lvbtn'+(i===S.lv?' cur':'')+'" data-lv="'+i+'" aria-label="第'+(i+1)+'关，'+(prog[i]||0)+'星">'+(i+1)+'<span>'+'★'.repeat(prog[i]||0)+'</span></button>';
+}
+function renderLevelbar() {
+  const columns=Math.max(1,Math.floor(((levelbarEl.clientWidth||320)+5)/41));
+  const start=Math.max(0,(Math.floor(S.lv/columns)-1)*columns),end=Math.min(LEVELS.length,start+columns*2);
+  levelbarEl.innerHTML='<div class="navtools"><span>第 '+(start+1)+'—'+end+' 关 / 共 '+LEVELS.length+' 关</span><button id="levelListBtn" class="listbtn"'+(busy?' disabled':'')+'>☷ 关卡列表</button></div><div class="lvpage" style="grid-template-columns:repeat('+columns+',minmax(0,1fr))">'+LEVELS.slice(start,end).map((_,j)=>levelButton(start+j)).join('')+'</div>';
+  lvnameEl.textContent='第 '+(S.lv+1)+' 关 · '+LEVELS[S.lv].name;
+}
+function showLevelList() {
+  if(busy)return;
+  showModal('<h2>关卡列表</h2><div class="alllevels">'+LEVELS.map((_,i)=>levelButton(i)).join('')+'</div><div class="row"><button class="btn" id="closeLevelList">关闭</button></div>');
+  $('closeLevelList').onclick=hideModal;
+  panelBox.querySelectorAll('[data-lv]').forEach(btn=>btn.onclick=()=>{if(busy)return;const i=+btn.dataset.lv;hideModal();loadLevel(i);});
+}
+
+function renderControls() {
+  undoBtn.disabled = busy || !S.history.length;
+  restartBtn.disabled = busy;
+}
+
+/* v0.8 起取消「有用格」呼吸描边高亮（橙框闪动干扰读盘，且等于把解法递到手上）；仅保留悬停预览 */
+function clearPreviews() {
+  boardEl.querySelectorAll('.preview').forEach(el => el.classList.remove('preview'));
+}
+
+function renderAll() {
+  elMap = {};
+  renderBoard();
+  entsEl.innerHTML = ''; fxEl.innerHTML = '';
+  bannerEl.classList.remove('show'); bannerEl.textContent = '';
+  for (const a of S.animals) if (!a.dead) createEntityEl(a, false);
+  renderHand(); renderStatus(); renderLevelbar(); renderControls();
+  hideModal(); clearPreviews();
+}
+
+/* ---------- 小组件 ---------- */
+let toastTimer = null, bannerTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+}
+function showBanner(text) {
+  bannerEl.textContent = text;
+  bannerEl.classList.remove('show');
+  void bannerEl.offsetWidth;
+  bannerEl.classList.add('show');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => { bannerEl.classList.remove('show'); bannerEl.textContent = ''; }, 1100);
+}
+function floatText(r, c, text) {
+  const el = document.createElement('div');
+  el.className = 'ft';
+  el.textContent = text;
+  el.style.left = (c * CELL + CELL / 2) + 'px';
+  el.style.top = (r * CELL) + 'px';
+  fxEl.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+function shake(cell) {
+  cell.classList.add('shake');
+  setTimeout(() => cell.classList.remove('shake'), 320);
+}
+function showModal(html) { panelBox.innerHTML = html; modalEl.classList.add('show'); }
+function hideModal() { modalEl.classList.remove('show'); }
+
+/* ---------- 动画演出 ---------- */
+/* FR-19 连击慢动作：先算后演——一次结算的 eat 数 ≥ min 时，事件回放间隔 × factor，
+ * 进食音按大调音阶随连击序号递进。只影响演出节奏，不影响结算结果。
+ * v0.9（开发计划 §2.3「单次结算回放 ≤4s」红线）：慢动作倍率改为自适应——按
+ * 「落牌 300 + 事件回放 + 横幅 450 ≤ 4000ms」倒推 eat 间隔倍率（1.05–2）；
+ * CSS .slowmo 的移动/进食动画仍 ×2（慢动作观感由动画承担）；
+ * fat 事件是状态闪现而非位移，慢动作档固定 240ms（eat ≥6 时归零赶 crescendo） */
+const COMBO_SLOW = { min: 4, maxFactor: 2, minFactor: 1.05 };
+const EV_MS = { eat: 470, fat: 430 };             // 默认事件间隔（<4 连，与 v0.8 一致）
+const FAT_SLOW_MS = 240;                          // 慢动作档 fat 间隔
+const comboSlow = events => {
+  const eats = events.filter(e => e.type === 'eat').length;
+  if (eats < COMBO_SLOW.min) return 1;
+  const fats = events.length - eats;
+  const fatMs = eats >= 6 ? 0 : FAT_SLOW_MS;
+  const budget = 3850 - 300 - 450 - fats * fatMs; // 给浏览器定时器/绘制留150ms余量，实测回放≤4s
+  return Math.min(COMBO_SLOW.maxFactor,
+    Math.max(COMBO_SLOW.minFactor, budget / (eats * EV_MS.eat)));
+};
+const SCALE = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2];  // 大调音阶（do re mi fa sol la si do'）
+
+async function animateEvent(ev, slow = 1, step = 0, shown = null, fatMs = EV_MS.fat) {
+  if (ev.type === 'eat') {
+    const preyEl = elMap[ev.prey];
+    const predEl = elMap[ev.pred];
+    if (preyEl) {
+      preyEl.classList.add('eaten');
+      setTimeout(() => preyEl.remove(), 460 * slow);
+      delete elMap[ev.prey];
+    }
+    sndEat(slow > 1 ? SCALE[Math.min(step, SCALE.length - 1)] : 1);
+    if (predEl) {
+      setEntityPos(predEl, ev.to.r, ev.to.c);
+      predEl.classList.add('chomp');
+      setTimeout(() => predEl.classList.remove('chomp'), 320 * slow);
+    }
+    if (shown) { shown[ev.pred] += ev.gain; updatePips(ev.pred, shown[ev.pred]); }
+    else updatePips(ev.pred);
+    floatText(ev.to.r, ev.to.c, (ev.preyFat ? '饱！+' : '+') + ev.gain);
+    await wait(EV_MS.eat * slow);
+  } else if (ev.type === 'fat') {
+    const el = elMap[ev.id];
+    const a = S.animals.find(x => x.id === ev.id);
+    if (el) el.classList.add('fat');
+    if (a) floatText(a.r, a.c, '吃饱！');
+    sndFat();
+    await wait(fatMs);                             // v0.9:慢动作档用固定 240ms(见 comboSlow 注)
+  }
+}
+
+function flyEl(a) {                                 // 胜利演出：飞向瓶口
+  const el = elMap[a.id];
+  if (!el) return;
+  el.classList.add('fly');
+  const x = (S.w * CELL) / 2 - CELL / 2;
+  el.style.transform = `translate(${x}px, ${-CELL * 1.25}px) scale(1.35)`;
+  setTimeout(() => el.remove(), 900);
+  delete elMap[a.id];
+}
+function fadeEl(a) {                                // 无人来吃：渐变消失，悄悄离开
+  const el = elMap[a.id];
+  if (!el) return;
+  el.classList.add('leave');
+  el.style.transform = `translate(${a.c * CELL}px, ${(a.r - 0.6) * CELL}px) scale(.82)`;
+  setTimeout(() => el.remove(), 850);
+  delete elMap[a.id];
+}
+
+async function doFlies(ids) {
+  for (const id of ids) {
+    const a = S.animals.find(x => x.id === id);
+    if (!a || a.dead) continue;
+    a.dead = true; S.released++;
+    floatText(a.r, a.c, '🕊️ 悄悄溜走');
+    fadeEl(a);
+    sndFly();
+    await wait(180);
+  }
+  await wait(560);
+  renderStatus();
+}
+
+/* ---------- 放牌主流程 ---------- */
+async function placeCard(sp, r, c) {
+  busy = true; renderControls(); clearPreviews();
+  // 快照（悔一步用）
+  S.history.push(JSON.stringify({
+    animals: S.animals, hand: S.hand, queue: S.queue, used: S.used, released: S.released, turn: S.turn
+  }));
+  if (S.history.length > 80) S.history.shift();
+
+  takeCard(sp);
+  const ent = { id: idSeq++, species: sp, r, c, satiety: 0, fat: false, fatSince: -1, dead: false };
+  S.animals.push(ent);
+  createEntityEl(ent, true);
+  renderHand(); renderStatus();
+  sndPlace();
+  await wait(300);
+
+  // 先算后演：结算前记下各动物饱食，回放时逐事件累加 gain，饱食点按「当时」显示而非终态
+  const shown = {};
+  for (const a of S.animals) shown[a.id] = a.satiety;
+  const { events, flies } = computeResolution(S.turn);
+  const slow = comboSlow(events);                   // FR-19：先算后演，≥4 连进入（自适应）慢动作
+  if (slow > 1) entsEl.classList.add('slowmo');
+  const fatMs = slow > 1
+    ? (events.filter(e => e.type === 'eat').length >= 6 ? 0 : FAT_SLOW_MS)
+    : EV_MS.fat;
+  let step = 0;
+  for (const ev of events) await animateEvent(ev, slow, ev.type === 'eat' ? step++ : step, shown, fatMs);
+  entsEl.classList.remove('slowmo');
+
+  const eats = events.filter(e => e.type === 'eat').length;
+  if (eats >= 2) { showBanner(`${slow > 1 ? '超级' : ''}连锁 ×${eats}！`); await wait(450); }
+
+  // 胜利判定：所有动物离场或吃饱（吃饱=即将离开，视为达成）；草不计入（§3.4 FAQ，v0.4 修复）
+  const win = allSettled();
+  if (win) { await doVictory(); return; }
+
+  if (flies.length) await doFlies(flies);
+
+  // 失败判定（§3.4 顺序：胜利 → 离开 → 手牌尽 → 盘满）
+  const why = loseReason();
+  if (why) { doLose(why); return; }
+  busy = false; renderControls();
+}
+
+async function doVictory() {
+  sndWin();
+  showBanner('🎉 通关成功！');
+  const alive = S.animals.filter(a => !a.dead);
+  for (const a of alive) { a.dead = true; S.released++; flyEl(a); sndFly(); await wait(150); }
+  await wait(850);
+  const stars = calcStars();
+  if ((prog[S.lv] || 0) < stars) {
+    prog[S.lv] = stars;
+    try { localStorage.setItem('eatfly_stars', JSON.stringify(prog)); } catch (e) {}
+  }
+  renderLevelbar();
+  const last = S.lv === LEVELS.length - 1;
+  showModal(`
+    <h2>🎉 通关成功！</h2>
+    <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+    <p class="tc">用牌 ${S.used} 张（最少 ${LEVELS[S.lv].par}）· 放归 ${S.released} 只小家伙</p>
+    <div class="row">
+      <button class="btn" id="mReplay">再玩一次</button>
+      ${last ? '' : '<button class="btn primary" id="mNext">下一关 →</button>'}
+    </div>`);
+  $('mReplay').onclick = () => loadLevel(S.lv);
+  if (!last) $('mNext').onclick = () => loadLevel(S.lv + 1);
+}
+
+function doLose(why) {
+  sndLose();
+  const msg = why === 'full'
+    ? `<h2>🫙 瓶子满了…</h2>
+    <p class="tc">手里还有牌，可瓶子里已经没有空格能放了。<br>
+    想想：哪张牌占了位置却没被吃掉？</p>`
+    : `<h2>😵 还有小家伙没吃饱…</h2>
+    <p class="tc">牌用完了，盘面上还有动物没离场。<br>
+    想想：它吃饱的位置对不对？旁边有没有能吃它的天敌？</p>`;
+  showModal(`
+    ${msg}
+    <div class="row">
+      ${S.history.length ? '<button class="btn" id="mUndo">↩ 悔一步</button>' : ''}
+      <button class="btn primary" id="mRetry">重新开始</button>
+    </div>`);
+  const u = $('mUndo');
+  if (u) u.onclick = () => undo(true);
+  $('mRetry').onclick = () => loadLevel(S.lv);
+}
+
+function calcStars() {
+  const par = LEVELS[S.lv].par;
+  if (S.used <= par) return 3;
+  if (S.used <= par + 1) return 2;
+  return 1;
+}
+
+/* ---------- 悔一步 / 选关 ---------- */
+function undo(force) {
+  if (!S.history.length) return;
+  if (busy && !force) return;
+  const s = JSON.parse(S.history.pop());
+  S.animals = s.animals; S.hand = s.hand; S.queue = s.queue || null; S.used = s.used;
+  S.released = s.released; S.turn = s.turn;
+  busy = false; sel = null;
+  renderAll();
+}
+
+const LEVEL_GUIDES = {
+0:{icon:'🌱',title:'欢迎来到生态链',text:'先点下方手牌，再点棋盘空格放置。<br><br>动物自动吃上下左右相邻的食物，并走到食物格；斜角吃不到。一次放置可能引发连续进食。<br><br>小圆点表示饱食度，填满就吃饱。普通食物加1，吃饱的动物作为食物加2。让所有动物吃饱或离场即可通关，草和剩余手牌不用清空。<br><br>先给兔子喂草吧！放错可以点“悔一步”。'},
+3:{icon:'🐇',title:'同类竞争：谁先吃？',text:'两只同类动物都能吃同一份食物时，尚未吃饱且饱食度更高的先行动。<br><br>饱食度相同，先上后下；同一行先左后右。已经吃饱的动物不再进食。<br><br>这里比较两只捕食者的行动顺序，不是挑选更饱的猎物。不同物种之间不按饱食度争先。'},
+8:{icon:'🦊',title:'选食顺序：吃哪一只？',text:'同一只动物有多个相邻食物时：<br><br>① 优先吃已经吃饱的猎物。<br>② 饱食状态相同，优先吃食物链层级更高的猎物，例如鹰先选狐或蛙，再选兔。<br>③ 再相同，先上后下，同一行先左后右。<br><br>狐狸旁边两只兔子都没吃饱，即使一只吃过1口、另一只0口，也按位置选择。只有“已经吃饱”才有优先权。'}
+};
+
+function loadLevel(i) {
+  const entering = !S || S.lv !== i;               // 重开/再玩本关不重复弹规则卡
+  S = newGameState(i);
+  busy = false; sel = null;
+  try { localStorage.setItem('eatfly_last', String(i)); } catch (e) {}
+  computeCell();
+  renderAll();
+  const guide = LEVEL_GUIDES[i] || LEVELS[i].intro;
+  if (entering && guide && !(prog[i] > 0)) showIntro(guide);
+}
+
+/* 新规则引入卡：仅在该规则首次出现的关卡配置 intro（L4 石头 / L5 鹰吃兔 / L11 固定顺序） */
+function showIntro(it) {
+  showModal(`
+    <div class="intro-icon">${it.icon}</div>
+    <div class="intro-tag">新规则</div>
+    <h2>${it.title}</h2>
+    <p>${it.text}</p>
+    <div class="row"><button class="btn primary" id="mIntro">知道了</button></div>`);
+  $('mIntro').onclick = hideModal;
+}
+
+/* ---------- 交互 ---------- */
+boardEl.addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if (!cell || busy || !S) return;
+  const r = +cell.dataset.r, c = +cell.dataset.c;
+  if (!sel || !canPlay(sel)) { toast('先点一张手牌'); return; }
+  if (isStone(r, c)) { toast('石头上放不了'); shake(cell); return; }
+  if (entityAt(r, c)) { toast('这里已经有小家伙了'); shake(cell); return; }
+  placeCard(sel, r, c);
+});
+
+handEl.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card || busy) return;
+  const sp = card.dataset.sp;
+  if (S.queue) {                                   // FR-17：顺序关只能出队首，不可切换
+    if (card.dataset.qi !== '0') { toast('本关按顺序出牌：先放 ① 号牌'); shake(card); }
+    return;
+  }
+  if (S.hand[sp] <= 0) return;
+  sel = (sel === sp) ? null : sp;
+  renderHand(); clearPreviews();
+});
+
+boardEl.addEventListener('mouseover', e => {
+  const cell = e.target.closest('.cell');
+  if (!cell || busy || !sel) return;
+  clearPreviews();
+  const r = +cell.dataset.r, c = +cell.dataset.c;
+  if (isStone(r, c) || entityAt(r, c)) return;
+  cell.classList.add('preview');
+  cell.style.setProperty('--pe', SPECIES[sel].emoji);
+});
+boardEl.addEventListener('mouseleave', clearPreviews);
+
+levelbarEl.addEventListener('click', e => {
+  if(e.target.closest('#levelListBtn')) { showLevelList(); return; }
+  const btn = e.target.closest('.lvbtn');
+  if (!btn || busy) return;
+  loadLevel(+btn.dataset.lv);
+});
+
+undoBtn.addEventListener('click', () => undo(false));
+restartBtn.addEventListener('click', () => { if (!busy) loadLevel(S.lv); });
+
+const syncSoundBtn = () => { $('soundBtn').textContent = muted ? '🔇' : '🔊'; };
+syncSoundBtn();                                   // 启动即按已存偏好显示
+$('soundBtn').addEventListener('click', () => {
+  muted = !muted;
+  syncSoundBtn();
+  try { localStorage.setItem('eatfly_muted', muted ? '1' : '0'); } catch (e) {}
+});
+
+$('helpBtn').addEventListener('click', () => {
+  showModal(`
+    <h2>📖 玩法说明</h2>
+    <p>
+    <b>放</b>：每回合必须放一张牌到空格，放下后自动结算（不放不动，没有倒计时）。<br><br>
+    <b>吃</b>：结算从食物链顶端开始——鹰→狐/蛙→兔/虫；同类竞争时，未吃饱的动物中<b>更饱的先吃</b>，饱食度相同再按从上到下、从左到右。同层不同物种保留各自的阅读序行动位次；每轮重新排序。每只动物吃掉相邻的一只猎物，并<b>走到猎物的格子</b>（像贪吃蛇）；吃「吃饱」的猎物一口顶两口。有的捕食者不止吃一种猎物——<b>老鹰吃狐狸、青蛙和兔子</b>；旁边有多种猎物时，先挑「吃饱」的，再挑营养级高的（狐/蛙 > 兔，同级按阅读序）。虫吃草、蛙吃虫，虫2口、蛙3口。<b>放下牌后能吃的都会吃：兔子刚一吃饱、旁边有狐狸，狐狸立刻吃掉它——即时连锁，一级传一级，直到没人再吃。</b><br><br>
+    <b>归</b>：吃饱的动物会发光。旁边没有天敌的吃饱动物，下一回合渐变消失、悄悄离开。<br><br>
+    <b>胜利</b>：盘面上所有动物都离场（被吃掉，或吃饱飞走）。<br>
+    <b>失败</b>：牌用完了还有动物没吃饱。<br><br>
+    <b>星级</b>：用牌数越接近本关最少张数，星越多。<br><br>
+    💡 提示：手牌里的动物放下当回合就参与结算——放在捕食者旁边等于「送餐上门」；把猎物喂饱，是为了给上一级备一口好粮。
+    </p>
+    <div class="row"><button class="btn primary" id="mClose">知道了</button></div>`);
+  $('mClose').onclick = hideModal;
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  renderLevelbar();
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (S && !busy) { computeCell(); renderAll(); }
+  }, 180);
+});
+
+/* ---------- T1 引擎单元用例（v2.2 多猎物；?test 时先于关卡自检运行） ----------
+ * 覆盖三条裁决：鹰吃兔（多猎物基础）/ 混合猎物偏好（吃饱>营养级>阅读序）/
+ * 鹰抢狐的肥兔（鹰先结算 + 吃饱优先 ⇒ 原 L5 解法被截胡，留作回归样本）。
+ * 每条 = 前置盘面 → 操作（放置）→ 期望（events 摘要 + 关键终态）。 */
+/* 断言小工具：事件摘要 'eat:pred>prey+gain' / 'fat:id'；新放置实体（非预置）列表 */
+const evSig = ev => ev.map(e => e.type === 'eat' ? `eat:${e.pred}>${e.prey}+${e.gain}` : `fat:${e.id}`).join(',');
+const placedOf = A => S.animals.filter(a => !A.includes(a));
+const at = (a, r, c) => a.r === r && a.c === c;
+
+/* U03 / U16 共用：即时连锁（兔吃饱 → 狐当场吃肥兔 → 狐吃饱，同一次放置内） */
+const CASE_U03_BOARD = { w: 4, h: 4, stones: [],
+  animals: [ { sp: 'fox', r: 2, c: 2, sat: 1 }, { sp: 'rabbit', r: 1, c: 1, sat: 1 } ] };
+function checkU03(runs, A) {
+  const [fox, rabbit] = A, [grass] = placedOf(A), f = [];
+  const want = `eat:${rabbit.id}>${grass.id}+1,fat:${rabbit.id},eat:${fox.id}>${rabbit.id}+2,fat:${fox.id}`;
+  if (runs.length !== 1) f.push('应只有 1 次放置');
+  if (evSig(runs[0].events) !== want) f.push(`事件应为 [${want}]，实得 [${evSig(runs[0].events)}]`);
+  if (!rabbit.dead) f.push('兔应 dead');
+  if (!fox.fat || fox.satiety !== 3 || !at(fox, 2, 1)) f.push('狐终态应为 3/3 fat @ (2,1)');
+  return f;
+}
+
+const ENGINE_CASES = [
+  /* —— U01–U16：§7.1 基础规则（v0.5 / M1-2 固化） —— */
+  { name: 'U01 基础吃+走',
+    board: { w: 3, h: 3, stones: [], animals: [ { sp: 'rabbit', r: 1, c: 1, sat: 0 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 0, 1] ],
+    check(runs, A) {
+      const [rabbit] = A, [grass] = placedOf(A), f = [];
+      if (evSig(runs[0].events) !== `eat:${rabbit.id}>${grass.id}+1`) f.push(`应恰好 1 个兔吃草 +1，实得 [${evSig(runs[0].events)}]`);
+      if (!grass.dead) f.push('草应 dead');
+      if (!at(rabbit, 0, 1) || rabbit.satiety !== 1 || rabbit.fat) f.push('兔终态应为 1/2 非 fat @ (0,1)');
+      return f;
+    } },
+
+  { name: 'U02 吃饱生效',
+    board: { w: 3, h: 3, stones: [], animals: [ { sp: 'rabbit', r: 0, c: 1, sat: 1 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 1, 1] ],
+    check(runs, A) {
+      const [rabbit] = A, [grass] = placedOf(A), f = [];
+      const want = `eat:${rabbit.id}>${grass.id}+1,fat:${rabbit.id}`;
+      if (evSig(runs[0].events) !== want) f.push(`事件应为 [${want}]，实得 [${evSig(runs[0].events)}]`);
+      if (rabbit.satiety !== 2 || !rabbit.fat || rabbit.fatSince !== 1) f.push('兔应 2/2 fat、fatSince=turn(1)');
+      if (runs[0].flies.length) f.push('刚吃饱不应进入 leaves');
+      return f;
+    } },
+
+  { name: 'U03 即时连锁（灵魂用例）',
+    board: CASE_U03_BOARD, hand: { grass: 1 }, moves: [ ['grass', 2, 1] ],
+    check: checkU03 },
+
+  { name: 'U04 两级连锁（两段式，灵魂用例）',
+    board: { w: 5, h: 5, stones: [],
+      animals: [ { sp: 'eagle', r: 0, c: 0, sat: 2 },
+                 { sp: 'fox', r: 0, c: 3, sat: 1 },
+                 { sp: 'rabbit', r: 2, c: 2, sat: 0 } ] },
+    hand: { grass: 2, rabbit: 1 }, settle: true,
+    moves: [ ['grass', 1, 2], ['grass', 0, 2], ['rabbit', 0, 1] ],
+    check(runs, A) {
+      const [eagle, fox, rabbit] = A, P = placedOf(A), f = [];
+      if (runs.length !== 3) { f.push(`应执行 3 次放置，实得 ${runs.length}`); return f; }
+      const w2 = `eat:${rabbit.id}>${P[1].id}+1,fat:${rabbit.id},eat:${fox.id}>${rabbit.id}+2,fat:${fox.id}`;
+      const w3 = `eat:${eagle.id}>${P[2].id}+1,eat:${eagle.id}>${fox.id}+2,fat:${eagle.id}`;
+      if (evSig(runs[1].events) !== w2) f.push(`第 2 放应为 兔→狐 连锁 [${w2}]，实得 [${evSig(runs[1].events)}]`);
+      if (evSig(runs[2].events) !== w3) f.push(`第 3 放应为 鹰吃兔→鹰吃肥狐 [${w3}]，实得 [${evSig(runs[2].events)}]`);
+      if (!eagle.fat || eagle.satiety !== 5) f.push('鹰应 5/4 fat');
+      if (!fox.dead || !rabbit.dead) f.push('狐、兔应 dead');
+      if (!runs[2].win) f.push('第 3 放后应判胜');
+      return f;
+    } },
+
+  { name: 'U05 优先吃饱猎物',
+    board: { w: 4, h: 4, stones: [],
+      animals: [ { sp: 'fox', r: 1, c: 1, sat: 0 },
+                 { sp: 'rabbit', r: 0, c: 1, sat: 0 },              // 兔A：阅读序在前
+                 { sp: 'rabbit', r: 2, c: 1, sat: 2, fat: true } ] }, // 兔B：吃饱
+    hand: { grass: 1 },
+    moves: [ ['grass', 3, 3] ],                                        // 触发牌（无人够得着）
+    check(runs, A) {
+      const [fox, rabbitA, rabbitB] = A, f = [];
+      if (evSig(runs[0].events) !== `eat:${fox.id}>${rabbitB.id}+2`) f.push(`狐应吃肥兔B +2，实得 [${evSig(runs[0].events)}]`);
+      if (rabbitA.dead) f.push('兔A 应存活');
+      if (fox.satiety !== 2 || !at(fox, 2, 1)) f.push('狐终态应为 2/3 @ (2,1)');
+      return f;
+    } },
+
+  /* 注：§7.1 原表的盘面（兔(1,1) 两侧 (1,0)/(1,2) 各一株草）几何上不成立——兔吃 (1,0) 后
+   * 走到 (1,0)，(1,2) 已不相邻。改为「草链」(1,2)→(2,2)：兔边吃边走，一次放置连吃两口。 */
+  { name: 'U06 贪吃（一次放置多口）',
+    board: { w: 4, h: 4, stones: [],
+      animals: [ { sp: 'rabbit', r: 1, c: 1, sat: 0 },
+                 { sp: 'grass', r: 1, c: 2 }, { sp: 'grass', r: 2, c: 2 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 3, 0] ],                                        // 触发牌
+    check(runs, A) {
+      const [rabbit, g1, g2] = A, f = [];
+      const want = `eat:${rabbit.id}>${g1.id}+1,eat:${rabbit.id}>${g2.id}+1,fat:${rabbit.id}`;
+      if (evSig(runs[0].events) !== want) f.push(`事件应为 [${want}]，实得 [${evSig(runs[0].events)}]`);
+      if (!rabbit.fat || rabbit.satiety !== 2 || !at(rabbit, 2, 2)) f.push('兔终态应为 2/2 fat @ (2,2)');
+      return f;
+    } },
+
+  { name: 'U07 层级优先',
+    board: { w: 4, h: 3, stones: [],
+      animals: [ { sp: 'eagle', r: 0, c: 1, sat: 0 },
+                 { sp: 'fox', r: 0, c: 2, sat: 0 },
+                 { sp: 'rabbit', r: 0, c: 3, sat: 0 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 2, 0] ],                                        // 触发牌
+    check(runs, A) {
+      const [eagle, fox, rabbit] = A, f = [];
+      const want = `eat:${eagle.id}>${fox.id}+1,eat:${eagle.id}>${rabbit.id}+1`;
+      if (evSig(runs[0].events) !== want) f.push(`应为 鹰先吃狐、再吃兔 [${want}]，实得 [${evSig(runs[0].events)}]`);
+      if (runs[0].events.some(e => e.pred === fox.id)) f.push('狐被吃后不应再进食');
+      if (eagle.satiety !== 2 || !at(eagle, 0, 3)) f.push('鹰终态应为 2/4 @ (0,3)');
+      return f;
+    } },
+
+  /* 注：§7.1 原表放草 (2,1) 与兔 (0,1) 不相邻，改放 (0,0) 才能断言「兔吃草 1/2」 */
+  { name: 'U08 吃饱不进食',
+    board: { w: 3, h: 3, stones: [],
+      animals: [ { sp: 'fox', r: 1, c: 1, sat: 3, fat: true },
+                 { sp: 'rabbit', r: 0, c: 1, sat: 0 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 0, 0] ],
+    check(runs, A) {
+      const [fox, rabbit] = A, [grass] = placedOf(A), f = [];
+      if (runs[0].events.some(e => e.pred === fox.id)) f.push('吃饱的狐不应有 eat 事件');
+      if (evSig(runs[0].events) !== `eat:${rabbit.id}>${grass.id}+1`) f.push(`应只有兔吃草，实得 [${evSig(runs[0].events)}]`);
+      if (rabbit.dead || rabbit.satiety !== 1 || !at(rabbit, 0, 0)) f.push('兔应存活 1/2 @ (0,0)');
+      if (fox.dead || !at(fox, 1, 1)) f.push('狐应原地存活');
+      return f;
+    } },
+
+  /* 远处放一只饿狐，确保不判胜，从而走到「胜利判定后结算离开」这一步 */
+  { name: 'U09 离开时机',
+    board: { w: 5, h: 5, stones: [],
+      animals: [ { sp: 'rabbit', r: 1, c: 1, sat: 2, fat: true, fs: 0 },   // fatSince = T-1
+                 { sp: 'fox', r: 4, c: 0, sat: 0 } ] },
+    hand: { grass: 2 }, settle: true,
+    moves: [ ['grass', 4, 4] ],
+    check(runs, A) {
+      const [rabbit] = A, f = [];
+      if (runs[0].win) f.push('不应判胜（饿狐仍在）');
+      if (!runs[0].flies.includes(rabbit.id)) f.push('leaves 应含该兔');
+      if (!rabbit.dead || S.released !== 1) f.push('结算后兔应 dead、released=1');
+      return f;
+    } },
+
+  { name: 'U10 刚吃饱不离',
+    board: { w: 4, h: 4, stones: [],
+      animals: [ { sp: 'rabbit', r: 1, c: 1, sat: 1 }, { sp: 'fox', r: 3, c: 3, sat: 0 } ] },
+    hand: { grass: 2 }, settle: true,
+    moves: [ ['grass', 0, 1] ],
+    check(runs, A) {
+      const [rabbit] = A, f = [];
+      if (!rabbit.fat || rabbit.fatSince !== 1) f.push('兔应本回合吃饱（fatSince=turn）');
+      if (runs[0].flies.length) f.push('leaves 应为空');
+      if (rabbit.dead || !at(rabbit, 0, 1) || S.released !== 0) f.push('兔应仍占格 (0,1)、released=0');
+      return f;
+    } },
+
+  { name: 'U11 胜利优先于失败',
+    board: { w: 3, h: 3, stones: [], animals: [ { sp: 'rabbit', r: 1, c: 1, sat: 1 } ] },
+    hand: { grass: 1 }, settle: true,
+    moves: [ ['grass', 0, 1] ],
+    check(runs) {
+      const f = [];
+      if (handCount() !== 0) f.push('手牌应已用尽');
+      if (!runs[0].win) f.push('最后一张牌喂饱最后一只 → 应判胜（不判负）');
+      return f;
+    } },
+
+  { name: 'U12 失败（手牌尽）',
+    board: { w: 4, h: 4, stones: [], animals: [ { sp: 'fox', r: 1, c: 1, sat: 0 } ] },
+    hand: { rabbit: 3 }, settle: true,
+    moves: [ ['rabbit', 3, 3], ['rabbit', 3, 1], ['rabbit', 0, 3] ],   // 三只都不挨狐（浪费）
+    check(runs) {
+      const f = [];
+      if (runs.some(r => r.events.length)) f.push('三次放置都不应产生事件');
+      if (!(!allSettled() && handCount() === 0)) f.push('应 !allSettled() && handCount()==0');
+      if (loseReason() !== 'hand') f.push(`失败原因应为 hand，实得 ${loseReason()}`);
+      return f;
+    } },
+
+  { name: 'U13 越界/石头',
+    board: { w: 3, h: 3, stones: [ [1, 0] ], animals: [ { sp: 'rabbit', r: 0, c: 0, sat: 0 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 0, 1] ],
+    check(runs, A) {
+      const [rabbit] = A, [grass] = placedOf(A), f = [];
+      if (evSig(runs[0].events) !== `eat:${rabbit.id}>${grass.id}+1`) f.push(`兔应只吃 (0,1)，实得 [${evSig(runs[0].events)}]`);
+      if (!at(rabbit, 0, 1)) f.push('兔应走到 (0,1)');
+      return f;
+    } },
+
+  { name: 'U14 送餐上门',
+    board: { w: 3, h: 3, stones: [], animals: [ { sp: 'fox', r: 1, c: 1, sat: 0 } ] },
+    hand: { rabbit: 1 },
+    moves: [ ['rabbit', 0, 1] ],
+    check(runs, A) {
+      const [fox] = A, [rabbit] = placedOf(A), f = [];
+      if (evSig(runs[0].events) !== `eat:${fox.id}>${rabbit.id}+1`) f.push(`放下的兔当轮应被狐吃，实得 [${evSig(runs[0].events)}]`);
+      if (!at(fox, 0, 1) || fox.satiety !== 1) f.push('狐应 1/3 @ (0,1)');
+      return f;
+    } },
+
+  { name: 'U15 溢出与饱食点显示',
+    board: { w: 5, h: 5, stones: [],
+      animals: [ { sp: 'fox', r: 2, c: 2, sat: 2 }, { sp: 'rabbit', r: 2, c: 1, sat: 2, fat: true } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 0, 4] ],                                        // 触发牌
+    check(runs, A) {
+      const [fox] = A, f = [];
+      if (fox.satiety !== 4 || !fox.fat) f.push(`狐内部应为 4/3 fat，实得 ${fox.satiety}`);
+      const on = (pipHTML(fox).match(/class="on"/g) || []).length;
+      const all = (pipHTML(fox).match(/<i /g) || []).length;
+      if (on !== 3 || all !== 3) f.push(`饱食点应显示 3/3（min(satiety,need)），实得 ${on}/${all}`);
+      return f;
+    } },
+
+  { name: 'U16 确定性（U03 重跑 100 次逐字节全等）',
+    board: CASE_U03_BOARD, hand: { grass: 1 }, moves: [ ['grass', 2, 1] ], repeat: 100,
+    check: checkU03 },
+
+  /* —— U20–U23：多猎物与草判定（v0.3 / v0.4） —— */
+  { name: 'U20 鹰吃兔',
+    board: { w: 3, h: 3, stones: [],
+      animals: [ { sp: 'eagle', r: 1, c: 1, sat: 0 }, { sp: 'rabbit', r: 0, c: 1, sat: 0 } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 2, 2] ],
+    check(runs, A) {
+      const [eagle, rabbit] = A, ev = runs[0].events, f = [];
+      if (ev.length !== 1 || ev[0].type !== 'eat') {
+        f.push(`应恰好 1 个 eat 事件，实得 [${ev.map(e => e.type)}]`); return f;
+      }
+      if (ev[0].pred !== eagle.id || ev[0].prey !== rabbit.id) f.push('应是鹰吃兔');
+      if (ev[0].gain !== 1 || ev[0].preyFat) f.push('普通兔应 gain=1、preyFat=false');
+      if (ev[0].to.r !== 0 || ev[0].to.c !== 1) f.push('鹰应走到 (0,1)');
+      if (!rabbit.dead) f.push('兔应 dead');
+      if (eagle.dead || eagle.fat || eagle.satiety !== 1 || eagle.r !== 0 || eagle.c !== 1)
+        f.push('鹰终态应为存活 1/4 @ (0,1)');
+      return f;
+    } },
+
+  { name: 'U21a 混合猎物·营养级优先（狐>兔）',
+    board: { w: 3, h: 3, stones: [],
+      animals: [ { sp: 'eagle', r: 1, c: 1, sat: 0 },
+                 { sp: 'rabbit', r: 0, c: 1, sat: 0 },      // 阅读序在前
+                 { sp: 'fox', r: 1, c: 0, sat: 0 } ] },     // 营养级更高
+    hand: { grass: 1 },
+    moves: [ ['grass', 2, 2] ],
+    check(runs, A) {
+      const [eagle, rabbit, fox] = A, ev = runs[0].events, f = [];
+      if (ev.length !== 1 || ev[0].type !== 'eat') {
+        f.push(`应恰好 1 个 eat 事件，实得 [${ev.map(e => e.type)}]`); return f;
+      }
+      if (ev[0].prey !== fox.id) f.push('应优先吃营养级更高的狐狸（而非阅读序在前的兔子）');
+      if (ev[0].gain !== 1 || ev[0].preyFat) f.push('普通狐应 gain=1');
+      if (!fox.dead) f.push('狐应 dead');
+      if (rabbit.dead || rabbit.satiety !== 0 || rabbit.r !== 0 || rabbit.c !== 1)
+        f.push('兔应原地 0/2 存活');
+      if (eagle.satiety !== 1 || eagle.fat || eagle.r !== 1 || eagle.c !== 0)
+        f.push('鹰终态应为 1/4 @ (1,0)');
+      return f;
+    } },
+
+  { name: 'U21b 混合猎物·吃饱优先（肥兔>狐）',
+    board: { w: 3, h: 3, stones: [],
+      animals: [ { sp: 'eagle', r: 1, c: 1, sat: 0 },
+                 { sp: 'fox', r: 0, c: 1, sat: 0 },          // 营养级更高且阅读序在前
+                 { sp: 'rabbit', r: 1, c: 0, sat: 2, fat: true } ] },
+    hand: { grass: 1 },
+    moves: [ ['grass', 2, 2] ],
+    check(runs, A) {
+      const [eagle, fox, rabbit] = A, ev = runs[0].events, f = [];
+      if (ev.length !== 1 || ev[0].type !== 'eat') {
+        f.push(`应恰好 1 个 eat 事件，实得 [${ev.map(e => e.type)}]`); return f;
+      }
+      if (ev[0].prey !== rabbit.id) f.push('应优先吃「吃饱」的兔子（吃饱 > 营养级 > 阅读序）');
+      if (ev[0].gain !== 2 || !ev[0].preyFat) f.push('肥兔应 gain=2、preyFat=true');
+      if (!rabbit.dead) f.push('兔应 dead');
+      if (fox.dead || fox.fat || fox.satiety !== 0 || fox.r !== 0 || fox.c !== 1)
+        f.push('狐应原地 0/3 存活');
+      if (eagle.satiety !== 2 || eagle.fat || eagle.r !== 1 || eagle.c !== 0)
+        f.push('鹰终态应为 2/4 @ (1,0)');
+      return f;
+    } },
+
+  { name: 'U22 鹰抢狐的肥兔（原 L5 解法被截胡）',
+    board: { w: 5, h: 5, stones: [],
+      animals: [ { sp: 'eagle', r: 0, c: 0, sat: 2 },
+                 { sp: 'fox', r: 0, c: 2, sat: 1 },
+                 { sp: 'rabbit', r: 2, c: 1, sat: 0 } ] },   // 原 L5 盘面
+    hand: { grass: 2 },
+    moves: [ ['grass', 1, 1], ['grass', 0, 1] ],             // 原 L5 标准解
+    check(runs, A) {
+      const [eagle, fox, rabbit] = A, ev1 = runs[0].events, ev2 = runs[1].events, f = [];
+      if (ev1.length !== 1 || ev1[0].type !== 'eat' || ev1[0].pred !== rabbit.id)
+        f.push('第 1 放应只有兔吃草 1 个 eat');
+      if (ev2.length !== 4) { f.push(`第 2 放应产生 4 个事件，实得 ${ev2.length}`); return f; }
+      if (ev2[0].type !== 'eat' || ev2[0].pred !== rabbit.id || ev2[0].gain !== 1)
+        f.push('事件1 应为兔吃草 +1');
+      if (ev2[1].type !== 'fat' || ev2[1].id !== rabbit.id) f.push('事件2 应为兔吃饱');
+      if (ev2[2].type !== 'eat' || ev2[2].pred !== eagle.id || ev2[2].prey !== rabbit.id ||
+          ev2[2].gain !== 2 || !ev2[2].preyFat) f.push('事件3 应为鹰截胡肥兔 +2');
+      if (ev2[3].type !== 'fat' || ev2[3].id !== eagle.id) f.push('事件4 应为鹰吃饱');
+      if (fox.dead || fox.fat || fox.satiety !== 1 || fox.r !== 0 || fox.c !== 2)
+        f.push('狐应原地饿着 1/3（被截胡、失去进食）');
+      if (!rabbit.dead) f.push('兔应 dead');
+      if (!eagle.fat || eagle.satiety !== 4 || eagle.r !== 0 || eagle.c !== 1)
+        f.push('鹰终态应为 4/4 fat @ (0,1)');
+      if (allSettled()) f.push('不应判胜（狐未饱 ⇒ 原解法失效）');
+      return f;
+    } },
+
+  { name: 'U23 草不阻断胜利',
+    board: { w: 3, h: 3, stones: [],
+      animals: [ { sp: 'rabbit', r: 1, c: 1, sat: 1 } ] },
+    hand: { grass: 2 },
+    moves: [ ['grass', 0, 0], ['grass', 0, 1] ],   // 第一株谁也够不着（浪费位），第二株喂饱兔
+    check(runs, A) {
+      const [rabbit] = A, f = [];
+      const liveGrass = S.animals.find(a => a.species === 'grass' && !a.dead);
+      if (!rabbit.fat || rabbit.satiety !== 2) f.push('兔应 2/2 fat');
+      if (!liveGrass) f.push('应有一株未被吃的草留在盘面');
+      if (!allSettled()) f.push('未吃的草不应阻断胜利（§3.4 FAQ：草无归宿义务）');
+      return f;
+    } },
+
+  /* —— U24：盘满判负（v0.5 / M1-1，§3.4-4） —— */
+  { name: 'U24 盘满判负',
+    board: { w: 2, h: 1, stones: [], animals: [ { sp: 'fox', r: 0, c: 0, sat: 0 } ] },
+    hand: { grass: 2 }, settle: true,
+    moves: [ ['grass', 0, 1] ],                    // 狐不吃草，最后一格被占
+    check(runs) {
+      const f = [];
+      if (runs[0].win) f.push('不应判胜');
+      if (handCount() !== 1) f.push('手牌应剩 1 张');
+      if (emptyCells().length) f.push('应无可放格');
+      if (loseReason() !== 'full') f.push(`失败原因应为 full（盘满），实得 ${loseReason()}`);
+      return f;
+    } },
+  /* U25（FR-17）：固定顺序只锁出牌权、不改结算——手里仍有草，但队首是兔时草不可出 */
+  { name: 'U25 固定顺序锁队首',
+    board: { w: 3, h: 3, stones: [], animals: [ { sp: 'fox', r: 2, c: 2, sat: 0 } ] },
+    seq: ['grass', 'rabbit', 'grass'],
+    moves: [ ['grass', 0, 0] ],
+    check(runs) {
+      const f = [];
+      if (runs[0].events.length) f.push('草远离狐，不应有事件');
+      if (JSON.stringify(S.queue) !== '["rabbit","grass"]') f.push(`队列应为 [兔,草]，实得 ${JSON.stringify(S.queue)}`);
+      if (S.hand.grass !== 1 || S.hand.rabbit !== 1) f.push('手牌计数应为 草1 兔1');
+      if (canPlay('grass')) f.push('队首是兔时草不可出');
+      if (!canPlay('rabbit')) f.push('队首兔应可出');
+      return f;
+    } },
+{"name":"U26 虫子两口移动吃饱","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"bug","r":1,"c":1}]},"hand":{"grass":2},"moves":[["grass",0,1],["grass",0,2]],check(runs,A){return A[0].fat&&A[0].r===0&&A[0].c===2?[]:['虫子应在第二株草处吃饱'];}},
+{"name":"U27 青蛙吃肥虫两口","board":{"w":3,"h":2,"stones":[],"animals":[{"sp":"frog","r":0,"c":0,"sat":1},{"sp":"bug","r":0,"c":1,"sat":2,"fat":true}]},"hand":{"grass":1},"moves":[["grass",1,2]],check(runs,A){return A[0].fat&&A[1].dead&&runs[0].events.some(e=>e.type==='eat'&&e.preyFat&&e.gain===2)?[]:['肥虫应补两口使蛙吃饱'];}},
+{"name":"U28 虫兔同层按位置争草","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"rabbit","r":2,"c":1},{"sp":"bug","r":0,"c":1}]},"hand":{"grass":1},"moves":[["grass",1,1]],check(runs,A){return A[1].satiety===1&&A[0].satiety===0?[]:['上方虫应先于下方兔吃草'];}},
+{"name":"U29 鹰对狐蛙同层阅读序","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"eagle","r":1,"c":1,"sat":3},{"sp":"fox","r":1,"c":2},{"sp":"frog","r":0,"c":1}]},"hand":{"grass":1},"moves":[["grass",2,0]],check(runs,A){return A[2].dead&&!A[1].dead?[]:['鹰应先吃上方蛙，而非按物种声明挑狐'];}},
+{"name":"U30 鹰优先肥猎物","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"eagle","r":1,"c":1,"sat":2},{"sp":"fox","r":1,"c":2,"sat":3,"fat":true},{"sp":"frog","r":0,"c":1}]},"hand":{"grass":1},"moves":[["grass",2,0]],check(runs,A){return A[1].dead&&!A[2].dead&&A[0].fat?[]:['鹰应先吃肥狐'];}},
+{"name":"竞争 rabbit 更饱优先","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"rabbit","r":0,"c":1,"sat":0},{"sp":"rabbit","r":2,"c":1,"sat":1}]},"hand":{"grass":1},"moves":[["grass",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[1].id?[]:["竞争先后错误"];}},
+{"name":"竞争 rabbit 同饱阅读序","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"rabbit","r":0,"c":1,"sat":0},{"sp":"rabbit","r":2,"c":1,"sat":0}]},"hand":{"grass":1},"moves":[["grass",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[0].id?[]:["竞争先后错误"];}},
+{"name":"竞争 bug 更饱优先","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"bug","r":0,"c":1,"sat":0},{"sp":"bug","r":2,"c":1,"sat":1}]},"hand":{"grass":1},"moves":[["grass",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[1].id?[]:["竞争先后错误"];}},
+{"name":"竞争 bug 同饱阅读序","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"bug","r":0,"c":1,"sat":0},{"sp":"bug","r":2,"c":1,"sat":0}]},"hand":{"grass":1},"moves":[["grass",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[0].id?[]:["竞争先后错误"];}},
+{"name":"竞争 fox 更饱优先","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"fox","r":0,"c":1,"sat":0},{"sp":"fox","r":2,"c":1,"sat":2}]},"hand":{"rabbit":1},"moves":[["rabbit",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[1].id?[]:["竞争先后错误"];}},
+{"name":"竞争 fox 同饱阅读序","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"fox","r":0,"c":1,"sat":0},{"sp":"fox","r":2,"c":1,"sat":0}]},"hand":{"rabbit":1},"moves":[["rabbit",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[0].id?[]:["竞争先后错误"];}},
+{"name":"竞争 frog 更饱优先","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"frog","r":0,"c":1,"sat":0},{"sp":"frog","r":2,"c":1,"sat":2}]},"hand":{"bug":1},"moves":[["bug",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[1].id?[]:["竞争先后错误"];}},
+{"name":"竞争 frog 同饱阅读序","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"frog","r":0,"c":1,"sat":0},{"sp":"frog","r":2,"c":1,"sat":0}]},"hand":{"bug":1},"moves":[["bug",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[0].id?[]:["竞争先后错误"];}},
+{"name":"竞争 eagle 更饱优先","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"eagle","r":0,"c":1,"sat":0},{"sp":"eagle","r":2,"c":1,"sat":3}]},"hand":{"fox":1},"moves":[["fox",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[1].id?[]:["竞争先后错误"];}},
+{"name":"竞争 eagle 同饱阅读序","board":{"w":3,"h":3,"stones":[],"animals":[{"sp":"eagle","r":0,"c":1,"sat":0},{"sp":"eagle","r":2,"c":1,"sat":0}]},"hand":{"fox":1},"moves":[["fox",1,1]],check(runs,A){const eat=runs[0].events.find(e=>e.type==="eat");return eat&&eat.pred===A[0].id?[]:["竞争先后错误"];}},
+];
+
+/* 跑一条引擎用例：纯引擎、零 DOM；返回失败列表（空 = 通过）
+ * 用例选项（v0.5 / M1-2）：
+ *   board.animals[i].fat / fs —— 预置吃饱态与 fatSince（U09 离开时机需要）
+ *   settle: true —— 与 placeCard 同语义：每放一张先做胜利判定（runs[i].win），
+ *                   非胜才结算 leaves（dead + released），胜则停止后续放置
+ *   repeat: N   —— 同一用例从同一初始态重跑 N 次，events 与终态须逐字节全等（U16）
+ *   seq: [...]  —— 固定顺序手牌（FR-17，替代 hand）；队首外的牌放置即判非法 */
+function runEngineCase(cs) {
+  const savedS = S, savedId = idSeq;
+  const B = cs.board;
+  function once() {
+    idSeq = savedId;                         // 每次重跑 id 序列一致（确定性比对的前提）
+    S = {
+      lv: 0, w: B.w, h: B.h, stones: (B.stones || []).map(s => s.slice()),
+      animals: B.animals.map(d => ({ id: idSeq++, species: d.sp, r: d.r, c: d.c,
+        satiety: d.sat || 0, fat: !!d.fat, fatSince: d.fs === undefined ? -1 : d.fs, dead: false })),
+      hand: cs.seq ? handOf(cs.seq) : Object.assign({}, cs.hand),
+      queue: cs.seq ? cs.seq.slice() : null, used: 0, released: 0, turn: 0, history: []
+    };
+    const A = S.animals.slice();             // 预置动物引用（断言用）
+    const runs = [];
+    let legal = true;
+    for (const [sp, r, c] of cs.moves) {
+      if (!canPlay(sp) || isStone(r, c) || entityAt(r, c)) { legal = false; break; }
+      takeCard(sp);
+      S.animals.push({ id: idSeq++, species: sp, r, c, satiety: 0, fat: false, fatSince: -1, dead: false });
+      const res = computeResolution(S.turn);
+      runs.push(res);
+      if (cs.settle) {
+        res.win = allSettled();
+        if (res.win) break;                  // 胜利 → 演出，后续不再放置
+        for (const id of res.flies) {        // 胜利判定后才结算离开
+          const a = S.animals.find(x => x.id === id);
+          if (a) { a.dead = true; S.released++; }
+        }
+      }
+    }
+    return { A, runs, legal };
+  }
+  let fails = [];
+  let out = once();
+  if (out.legal && cs.repeat) {
+    const sig = JSON.stringify({ runs: out.runs, animals: S.animals });
+    for (let k = 1; k < cs.repeat; k++) {
+      out = once();
+      if (JSON.stringify({ runs: out.runs, animals: S.animals }) !== sig) {
+        fails.push(`第 ${k + 1} 次重跑结果与首次不一致（确定性破坏）`); break;
+      }
+    }
+  }
+  if (!out.legal) fails = ['放置非法（牌不足/石头/占用）'];
+  else if (!fails.length) {
+    try { fails = cs.check(out.runs, out.A) || []; }
+    catch (e) { fails = ['断言异常：' + (e && e.message || e)]; }
+  }
+  S = savedS; idSeq = savedId;
+  return fails;
+}
+
+/* ---------- 自检（打开 ...?test：先跑 T1 引擎用例，再跑 T2 关卡标准解） ---------- */
+function runSelfTest() {
+  const saved = S;
+  const lines = [];
+  let caseOK = 0;
+  for (const cs of ENGINE_CASES) {
+    const fails = runEngineCase(cs);
+    if (!fails.length) { caseOK++; lines.push(`✓ ${cs.name}`); }
+    else lines.push(`✗ ${cs.name}：${fails.join('；')}`);
+  }
+  let lvOK = 0;
+  LEVELS.forEach((L, i) => {
+    S = newGameState(i);
+    let legal = true;
+    for (const [sp, r, c] of SOLUTIONS[i]) {
+      if (!canPlay(sp) || isStone(r, c) || entityAt(r, c)) { legal = false; break; }
+      takeCard(sp);
+      S.animals.push({ id: idSeq++, species: sp, r, c, satiety: 0, fat: false, fatSince: -1, dead: false });
+      const res = computeResolution(S.turn);
+      if (allSettled()) break; // 提前获胜则结束
+      for (const id of res.flies) {                     // 与 placeCard 一致：胜利判定后才结算离开
+        const a = S.animals.find(x => x.id === id);
+        if (a) { a.dead = true; S.released++; }
+      }
+    }
+    const win = allSettled();
+    if (win && legal) { lvOK++; lines.push(`✓ 第 ${i + 1} 关 ${L.name}：可解`); }
+    else lines.push(`✗ 第 ${i + 1} 关 ${L.name}：异常`);
+  });
+  S = saved;
+  const head = `引擎用例 ${caseOK}/${ENGINE_CASES.length} · 关卡 ${lvOK}/${LEVELS.length}`;
+  console.log(`[生态链·EcoLoop 自检] ${head}\n` + lines.join('\n'));
+  showModal(`<h2>🧪 自检报告</h2><p class="tc">${head}</p>
+    <p class="tc" style="font-size:12px;line-height:1.8">${lines.join('<br>')}</p>
+    <div class="row"><button class="btn primary" id="mGo">开始游戏</button></div>`);
+  $('mGo').onclick = () => loadLevel(lastLevel());
+}
+
+function lastLevel() {
+  let i = 0;
+  try { i = parseInt(localStorage.getItem('eatfly_last') || '0', 10) || 0; } catch (e) {}
+  return Math.max(0, Math.min(LEVELS.length - 1, i));
+}
+
+/* ---------- 启动 ---------- */
+if (new URLSearchParams(location.search).has('test')) {   // 修复：?test 无值时 get() 返回空串（恒假），v0.2 起自检从未真正触发过
+  runSelfTest();
+} else {
+  loadLevel(lastLevel());
+}
+</script>
+</body>
+</html>

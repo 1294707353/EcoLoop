@@ -1,0 +1,689 @@
+{
+  "states": 442,
+  "edges": 3994,
+  "wrongs": [
+    {
+      "prefix": [
+        [
+          "grass",
+          2,
+          3
+        ]
+      ],
+      "events": [
+        {
+          "type": "eat",
+          "pred": 6,
+          "prey": 100,
+          "gain": 1,
+          "preyFat": false,
+          "to": {
+            "r": 2,
+            "c": 3
+          },
+          "before": {
+            "id": 6,
+            "species": "rabbit",
+            "r": 3,
+            "c": 3,
+            "satiety": 1,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          },
+          "food": {
+            "id": 100,
+            "species": "grass",
+            "r": 2,
+            "c": 3,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": true
+          },
+          "options": [
+            {
+              "id": 100,
+              "species": "grass",
+              "r": 2,
+              "c": 3,
+              "satiety": 0,
+              "fat": false,
+              "fatSince": -1,
+              "dead": false
+            }
+          ],
+          "round": 0
+        },
+        {
+          "type": "fat",
+          "id": 6
+        }
+      ],
+      "remainingSolvable": false
+    },
+    {
+      "prefix": [
+        [
+          "grass",
+          1,
+          1
+        ],
+        [
+          "grass",
+          3,
+          0
+        ]
+      ],
+      "events": [
+        {
+          "type": "eat",
+          "pred": 5,
+          "prey": 101,
+          "gain": 1,
+          "preyFat": false,
+          "to": {
+            "r": 3,
+            "c": 0
+          },
+          "before": {
+            "id": 5,
+            "species": "bug",
+            "r": 3,
+            "c": 1,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          },
+          "food": {
+            "id": 101,
+            "species": "grass",
+            "r": 3,
+            "c": 0,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": true
+          },
+          "options": [
+            {
+              "id": 101,
+              "species": "grass",
+              "r": 3,
+              "c": 0,
+              "satiety": 0,
+              "fat": false,
+              "fatSince": -1,
+              "dead": false
+            }
+          ],
+          "round": 0
+        }
+      ],
+      "remainingSolvable": false
+    },
+    {
+      "prefix": [
+        [
+          "grass",
+          1,
+          1
+        ],
+        [
+          "grass",
+          2,
+          3
+        ],
+        [
+          "rabbit",
+          0,
+          0
+        ]
+      ],
+      "events": [
+        {
+          "type": "eat",
+          "pred": 1,
+          "prey": 102,
+          "gain": 1,
+          "preyFat": false,
+          "to": {
+            "r": 0,
+            "c": 0
+          },
+          "before": {
+            "id": 1,
+            "species": "eagle",
+            "r": 1,
+            "c": 0,
+            "satiety": 2,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          },
+          "food": {
+            "id": 102,
+            "species": "rabbit",
+            "r": 0,
+            "c": 0,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": true
+          },
+          "options": [
+            {
+              "id": 102,
+              "species": "rabbit",
+              "r": 0,
+              "c": 0,
+              "satiety": 0,
+              "fat": false,
+              "fatSince": -1,
+              "dead": false
+            }
+          ],
+          "round": 0
+        },
+        {
+          "type": "eat",
+          "pred": 1,
+          "prey": 4,
+          "gain": 1,
+          "preyFat": false,
+          "to": {
+            "r": 0,
+            "c": 1
+          },
+          "before": {
+            "id": 1,
+            "species": "eagle",
+            "r": 0,
+            "c": 0,
+            "satiety": 3,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          },
+          "food": {
+            "id": 4,
+            "species": "frog",
+            "r": 0,
+            "c": 1,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": true
+          },
+          "options": [
+            {
+              "id": 4,
+              "species": "frog",
+              "r": 0,
+              "c": 1,
+              "satiety": 0,
+              "fat": false,
+              "fatSince": -1,
+              "dead": false
+            }
+          ],
+          "round": 1
+        },
+        {
+          "type": "fat",
+          "id": 1
+        }
+      ],
+      "remainingSolvable": false
+    },
+    {
+      "prefix": [
+        [
+          "grass",
+          1,
+          1
+        ],
+        [
+          "grass",
+          2,
+          3
+        ],
+        [
+          "rabbit",
+          2,
+          2
+        ],
+        [
+          "grass",
+          3,
+          0
+        ]
+      ],
+      "events": [
+        {
+          "type": "eat",
+          "pred": 5,
+          "prey": 103,
+          "gain": 1,
+          "preyFat": false,
+          "to": {
+            "r": 3,
+            "c": 0
+          },
+          "before": {
+            "id": 5,
+            "species": "bug",
+            "r": 3,
+            "c": 1,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          },
+          "food": {
+            "id": 103,
+            "species": "grass",
+            "r": 3,
+            "c": 0,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": true
+          },
+          "options": [
+            {
+              "id": 103,
+              "species": "grass",
+              "r": 3,
+              "c": 0,
+              "satiety": 0,
+              "fat": false,
+              "fatSince": -1,
+              "dead": false
+            }
+          ],
+          "round": 0
+        }
+      ],
+      "remainingSolvable": false
+    }
+  ],
+  "trace": [
+    [],
+    [
+      {
+        "type": "eat",
+        "pred": 6,
+        "prey": 101,
+        "gain": 1,
+        "preyFat": false,
+        "to": {
+          "r": 2,
+          "c": 3
+        },
+        "before": {
+          "id": 6,
+          "species": "rabbit",
+          "r": 3,
+          "c": 3,
+          "satiety": 1,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 101,
+          "species": "grass",
+          "r": 2,
+          "c": 3,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 101,
+            "species": "grass",
+            "r": 2,
+            "c": 3,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          }
+        ],
+        "round": 0
+      },
+      {
+        "type": "fat",
+        "id": 6
+      }
+    ],
+    [
+      {
+        "type": "eat",
+        "pred": 2,
+        "prey": 102,
+        "gain": 1,
+        "preyFat": false,
+        "to": {
+          "r": 2,
+          "c": 2
+        },
+        "before": {
+          "id": 2,
+          "species": "fox",
+          "r": 2,
+          "c": 1,
+          "satiety": 1,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 102,
+          "species": "rabbit",
+          "r": 2,
+          "c": 2,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 102,
+            "species": "rabbit",
+            "r": 2,
+            "c": 2,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          }
+        ],
+        "round": 0
+      },
+      {
+        "type": "eat",
+        "pred": 2,
+        "prey": 6,
+        "gain": 2,
+        "preyFat": true,
+        "to": {
+          "r": 2,
+          "c": 3
+        },
+        "before": {
+          "id": 2,
+          "species": "fox",
+          "r": 2,
+          "c": 2,
+          "satiety": 2,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 6,
+          "species": "rabbit",
+          "r": 2,
+          "c": 3,
+          "satiety": 2,
+          "fat": true,
+          "fatSince": 2,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 6,
+            "species": "rabbit",
+            "r": 2,
+            "c": 3,
+            "satiety": 2,
+            "fat": true,
+            "fatSince": 2,
+            "dead": false
+          }
+        ],
+        "round": 1
+      },
+      {
+        "type": "fat",
+        "id": 2
+      }
+    ],
+    [
+      {
+        "type": "eat",
+        "pred": 5,
+        "prey": 103,
+        "gain": 1,
+        "preyFat": false,
+        "to": {
+          "r": 2,
+          "c": 1
+        },
+        "before": {
+          "id": 5,
+          "species": "bug",
+          "r": 3,
+          "c": 1,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 103,
+          "species": "grass",
+          "r": 2,
+          "c": 1,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 103,
+            "species": "grass",
+            "r": 2,
+            "c": 1,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          }
+        ],
+        "round": 0
+      },
+      {
+        "type": "eat",
+        "pred": 5,
+        "prey": 100,
+        "gain": 1,
+        "preyFat": false,
+        "to": {
+          "r": 1,
+          "c": 1
+        },
+        "before": {
+          "id": 5,
+          "species": "bug",
+          "r": 2,
+          "c": 1,
+          "satiety": 1,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 100,
+          "species": "grass",
+          "r": 1,
+          "c": 1,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 100,
+            "species": "grass",
+            "r": 1,
+            "c": 1,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          }
+        ],
+        "round": 1
+      },
+      {
+        "type": "fat",
+        "id": 5
+      },
+      {
+        "type": "eat",
+        "pred": 4,
+        "prey": 5,
+        "gain": 2,
+        "preyFat": true,
+        "to": {
+          "r": 1,
+          "c": 1
+        },
+        "before": {
+          "id": 4,
+          "species": "frog",
+          "r": 0,
+          "c": 1,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 5,
+          "species": "bug",
+          "r": 1,
+          "c": 1,
+          "satiety": 2,
+          "fat": true,
+          "fatSince": 4,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 5,
+            "species": "bug",
+            "r": 1,
+            "c": 1,
+            "satiety": 2,
+            "fat": true,
+            "fatSince": 4,
+            "dead": false
+          }
+        ],
+        "round": 2
+      },
+      {
+        "type": "eat",
+        "pred": 1,
+        "prey": 4,
+        "gain": 1,
+        "preyFat": false,
+        "to": {
+          "r": 1,
+          "c": 1
+        },
+        "before": {
+          "id": 1,
+          "species": "eagle",
+          "r": 1,
+          "c": 0,
+          "satiety": 2,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 4,
+          "species": "frog",
+          "r": 1,
+          "c": 1,
+          "satiety": 2,
+          "fat": false,
+          "fatSince": -1,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 4,
+            "species": "frog",
+            "r": 1,
+            "c": 1,
+            "satiety": 2,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          }
+        ],
+        "round": 3
+      },
+      {
+        "type": "eat",
+        "pred": 1,
+        "prey": 3,
+        "gain": 1,
+        "preyFat": false,
+        "to": {
+          "r": 1,
+          "c": 2
+        },
+        "before": {
+          "id": 1,
+          "species": "eagle",
+          "r": 1,
+          "c": 1,
+          "satiety": 3,
+          "fat": false,
+          "fatSince": -1,
+          "dead": false
+        },
+        "food": {
+          "id": 3,
+          "species": "fox",
+          "r": 1,
+          "c": 2,
+          "satiety": 0,
+          "fat": false,
+          "fatSince": -1,
+          "dead": true
+        },
+        "options": [
+          {
+            "id": 3,
+            "species": "fox",
+            "r": 1,
+            "c": 2,
+            "satiety": 0,
+            "fat": false,
+            "fatSince": -1,
+            "dead": false
+          }
+        ],
+        "round": 4
+      },
+      {
+        "type": "fat",
+        "id": 1
+      }
+    ]
+  ]
+}
